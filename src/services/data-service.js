@@ -8,32 +8,26 @@ class DataService {
         this.currentMapId = null;
     }
 
-    // Загружает локации текущей активной карты.
-    //
-    // ВРЕМЕННОЕ УПРОЩЕНИЕ: пока не готов WorldsService с осознанным выбором
-    // мира/карты, берём первую карту, доступную текущему пользователю —
-    // RLS-политики сами вернут только те миры, где он состоит участником,
-    // так что подмену чужих данных это не допускает. Когда появится
-    // WorldsService, здесь появится параметр mapId вместо автоопределения.
-    async loadAllLocations() {
-        if (this.loaded) return this.allLocations;
+    // Загружает локации конкретной карты. mapId теперь приходит явно —
+    // из экрана выбора мира (WorldSelectionPage), а не подбирается сам.
+    // RLS-политики всё равно перепроверяют доступ на уровне БД, так что
+    // даже если mapId подставить чужой, чужие данные не вернутся.
+    async loadAllLocations(mapId) {
+        if (!mapId) {
+            throw new Error('mapId is required to load locations');
+        }
+
+        if (this.loaded && this.currentMapId === mapId) {
+            return this.allLocations;
+        }
 
         try {
-            const map = await this.resolveCurrentMap();
-
-            if (!map) {
-                console.warn('⚠️ No accessible map found for current user. Смотри инструкцию по созданию тестовых данных.');
-                this.allLocations = [];
-                this.loaded = true;
-                return this.allLocations;
-            }
-
-            this.currentMapId = map.id;
+            this.currentMapId = mapId;
 
             const { data, error } = await supabase
                 .from('locations')
                 .select('*')
-                .eq('map_id', map.id);
+                .eq('map_id', mapId);
 
             if (error) {
                 throw error;
@@ -51,21 +45,6 @@ class DataService {
             console.error('❌ Data uploading error:', error);
             throw error;
         }
-    }
-
-    async resolveCurrentMap() {
-        const { data, error } = await supabase
-            .from('maps')
-            .select('*')
-            .limit(1)
-            .maybeSingle();
-
-        if (error) {
-            console.error('❌ Error resolving current map:', error);
-            return null;
-        }
-
-        return data;
     }
 
     // Приводим строку из БД (coord_x/coord_y, image_url) к формату,

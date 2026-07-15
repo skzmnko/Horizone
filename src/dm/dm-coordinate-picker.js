@@ -9,8 +9,6 @@ class DMCoordinatePicker {
         this.tempCircle = null;
         this.coordsDisplay = null;
         this.displayContainer = null;
-        this.imageWidth = 10000;
-        this.imageHeight = 10000;
     }
 
     activate(onPickCallback) {
@@ -113,8 +111,10 @@ class DMCoordinatePicker {
         const pixelX = pointPixels.x;
         const pixelY = pointPixels.y;
 
-        const percentX = (pixelX / this.imageWidth) * 100;
-        const percentY = (pixelY / this.imageHeight) * 100;
+        // Размер карты теперь берём из MapService — он соответствует
+        // реальной загруженной картинке текущего мира, а не зашитым 10000
+        const percentX = (pixelX / MapService.mapWidth) * 100;
+        const percentY = (pixelY / MapService.mapHeight) * 100;
 
         this.updateCoordsDisplay(percentX, percentY, pixelX, pixelY);
 
@@ -140,8 +140,8 @@ class DMCoordinatePicker {
         const pixelX = pointPixels.x;
         const pixelY = pointPixels.y;
 
-        const percentX = (pixelX / this.imageWidth) * 100;
-        const percentY = (pixelY / this.imageHeight) * 100;
+        const percentX = (pixelX / MapService.mapWidth) * 100;
+        const percentY = (pixelY / MapService.mapHeight) * 100;
 
         this.updateCoordsDisplay(percentX, percentY, pixelX, pixelY);
     };

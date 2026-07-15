@@ -5,9 +5,16 @@ class MapService {
         this.mapWidth = 10000;
         this.mapHeight = 10000;
         this.scaleControl = null;
+        this.imageLayer = null;
     }
 
-    initialize(mapElementId) {
+    // mapConfig = { width, height, imageUrl }
+    // width/height — реальный размер загруженной картинки карты (в пикселях)
+    // imageUrl — публичная ссылка на изображение в Supabase Storage
+    initialize(mapElementId, mapConfig = {}) {
+        this.mapWidth = mapConfig.width || 10000;
+        this.mapHeight = mapConfig.height || 10000;
+
         this.map = L.map(mapElementId, {
             minZoom: 0,
             maxZoom: 5,
@@ -22,12 +29,13 @@ class MapService {
         const northEast = this.map.unproject([this.mapWidth, 0], this.map.getMaxZoom());
         this.bounds = new L.LatLngBounds(southWest, northEast);
 
-        this.addTileLayer();
-        
+        if (mapConfig.imageUrl) {
+            this.imageLayer = L.imageOverlay(mapConfig.imageUrl, this.bounds).addTo(this.map);
+        }
+
         this.createScaleControl();
-       
         this.createCustomZoomControl();
-        
+
         this.map.setView(this.bounds.getCenter(), 2);
 
         this.map.on('zoomend', () => {
@@ -43,16 +51,15 @@ class MapService {
         const zoomControl = L.control.zoom({
             position: 'bottomright'
         });
-        
+
         zoomControl.addTo(this.map);
-        
+
         setTimeout(() => {
             const zoomContainer = document.querySelector('.leaflet-control-zoom');
             const scaleContainer = document.querySelector('.leaflet-control-scale');
-            
+
             if (zoomContainer && scaleContainer) {
                 scaleContainer.parentNode.insertBefore(zoomContainer, scaleContainer);
-                
                 zoomContainer.style.marginBottom = '5px';
             }
         }, 100);
@@ -60,7 +67,7 @@ class MapService {
 
     createScaleControl() {
         this.scaleControl = L.control({ position: 'bottomright' });
-        
+
         this.scaleControl.onAdd = () => {
             this.scaleContainer = L.DomUtil.create('div', 'leaflet-control-scale');
             this.scaleContainer.style.background = 'rgba(255, 255, 255, 0.85)';
@@ -73,18 +80,23 @@ class MapService {
             this.scaleContainer.style.border = '1px solid rgba(0, 0, 0, 0.3)';
             this.scaleContainer.style.textShadow = 'none';
             this.scaleContainer.style.backdropFilter = 'blur(2px)';
-            
+
             return this.scaleContainer;
         };
-        
+
         this.scaleControl.addTo(this.map);
     }
 
     updateScaleControl() {
         if (!this.scaleContainer) return;
-        
+
+        // Примечание: значения масштаба в милях подобраны под демо-карту
+        // из старого проекта и не отражают реальный масштаб произвольной
+        // пользовательской карты. Это чисто косметическая метка — если
+        // важна точная шкала расстояний, эту часть стоит доработать отдельно
+        // (например, дать DM указать масштаб при загрузке карты).
         const currentZoom = this.map.getZoom();
-        
+
         const scaleConfig = {
             0: { miles: 1600, width: 100 },
             1: { miles: 800, width: 100 },
@@ -93,10 +105,10 @@ class MapService {
             4: { miles: 100, width: 100 },
             5: { miles: 50, width: 100 }
         };
-        
+
         const config = scaleConfig[currentZoom] || scaleConfig[0];
         const scaleText = `${config.miles} ${config.miles === 1 ? 'миля' : 'миль'}`;
-        
+
         this.scaleContainer.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div style="display: flex; flex-direction: column; align-items: center;">
@@ -107,52 +119,13 @@ class MapService {
         `;
     }
 
-    addTileLayer() {
-        const tileLayer = L.tileLayer('images/tiles/{z}/{x}/{y}.{ext}', {
-            minZoom: 0,
-            maxZoom: 5,
-            noWrap: true,
-            bounds: this.bounds,
-            tileSize: 512,
-            attribution: '',
-            errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-            
-            ext: (function() {
-                const canvas = document.createElement('canvas');
-                return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0 ? 'webp' : 'png';
-            })(),
-            
-            getTileUrl: function(coords) {
-                const y = (1 << coords.z) - coords.y - 1;
-                return L.Util.template(this._url, L.extend({
-                    x: coords.x,
-                    y: y,
-                    z: coords.z,
-                    ext: this.options.ext,
-                    s: this._getSubdomain(coords)
-                }, this.options));
-            }
-        }).addTo(this.map);
-
-        tileLayer.on('tileload', function(e) {
-            const tile = e.tile;
-            const src = tile.src;
-            if (src.includes('/tiles/0/0/0.')) {
-                tile.setAttribute('fetchpriority', 'high');
-                tile.setAttribute('loading', 'eager');
-            }
-        });
-
-        return tileLayer;
-    }
-
     percentToLatLng(percentCoords) {
         const x_percent = percentCoords[0];
         const y_percent = percentCoords[1];
-        
+
         const x_px = (x_percent / 100) * this.mapWidth;
         const y_px = (y_percent / 100) * this.mapHeight;
-        
+
         return this.map.unproject([x_px, y_px], this.map.getMaxZoom());
     }
 
