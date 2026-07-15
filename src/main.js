@@ -83,9 +83,12 @@ class Application {
         if (!map.image_path) {
             if (AuthService.isDM()) {
                 const mapUploadPage = new MapUploadPage();
-                mapUploadPage.initialize(worldId, mapId, () => {
-                    this.initializeApp();
-                });
+                mapUploadPage.initialize(
+                    worldId,
+                    mapId,
+                    () => { this.initializeApp(); },
+                    () => { this.showWorldSelectionPage(); }
+                );
             } else {
                 this.showWaitingForMapMessage();
             }
@@ -107,9 +110,17 @@ class Application {
                     <h1>Карта ещё не готова</h1>
                     <p>Мастер пока не загрузил изображение карты для этого мира</p>
                 </div>
+                <button id="back-to-worlds-from-waiting" class="login-btn" style="margin-top:16px;">
+                    ← Назад к мирам
+                </button>
             </div>
         `;
         document.body.appendChild(container);
+
+        document.getElementById('back-to-worlds-from-waiting').addEventListener('click', () => {
+            container.parentNode.removeChild(container);
+            this.showWorldSelectionPage();
+        });
     }
 
     async initializeApp() {
@@ -161,6 +172,7 @@ class Application {
         SearchService.initialize();
 
         this.updateMobileDMButtonVisibility();
+        this.addBackToWorldsButton();
 
         if (AuthService.isDM() && !this.isMobile) {
             this.dmToolsPanel = DMToolsPanel;
@@ -182,6 +194,37 @@ class Application {
         window.authService = AuthService;
         window.detailPanelService = DetailPanelService;
         window.dmToolsPanel = DMToolsPanel;
+    }
+
+    addBackToWorldsButton() {
+        const btn = document.createElement('button');
+        btn.id = 'back-to-worlds-btn';
+        btn.textContent = '← Миры';
+        btn.title = 'Вернуться к списку миров';
+        btn.style.cssText = `
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 10000;
+            background: rgba(0,0,0,0.75);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+        `;
+        btn.addEventListener('click', () => {
+            // Полная перезагрузка — самый надёжный способ корректно
+            // разобрать карту и все связанные с ней UI-сервисы
+            // (DM-панель, поиск, детали локации), не переписывая
+            // их под явное уничтожение. Сессия сохранена в Supabase,
+            // поэтому после перезагрузки открывается сразу список миров,
+            // а не форма логина.
+            window.location.reload();
+        });
+        document.body.appendChild(btn);
     }
 
     updateMobileDMButtonVisibility() {

@@ -109,9 +109,6 @@ begin
   insert into world_members (world_id, user_id, role)
   values (_world_id, auth.uid(), 'dm');
 
-  insert into maps (world_id, name)
-  values (_world_id, 'Основная карта');
-
   return _world_id;
 end;
 $$;

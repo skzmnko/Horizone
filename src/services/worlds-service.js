@@ -108,6 +108,73 @@ class WorldsService {
 
         return data;
     }
+
+    // Создать новую карту в уже существующем мире (например, когда
+    // единственную карту мира удалили, или DM хочет несколько карт)
+    async createMap(worldId, name) {
+        const { data, error } = await supabase
+            .from('maps')
+            .insert({ world_id: worldId, name })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('❌ Error creating map:', error);
+            throw error;
+        }
+
+        console.log(`✅ Map created: ${name} (${data.id})`);
+        return data;
+    }
+
+    // Удалить мир целиком: сначала подчищаем файлы карт в Storage
+    // (участники/карты/локации в БД удалятся сами — на них стоит
+    // "on delete cascade"), затем удаляем саму строку мира.
+    async deleteWorld(worldId) {
+        const { data: files, error: listError } = await supabase.storage
+            .from('map-images')
+            .list(worldId);
+
+        if (listError) {
+            console.warn('⚠️ Could not list world files before delete:', listError);
+        } else if (files && files.length > 0) {
+            const paths = files.map(f => `${worldId}/${f.name}`);
+            await supabase.storage.from('map-images').remove(paths);
+        }
+
+        const { error } = await supabase
+            .from('worlds')
+            .delete()
+            .eq('id', worldId);
+
+        if (error) {
+            console.error('❌ Error deleting world:', error);
+            throw error;
+        }
+
+        console.log(`🗑️ World deleted: ${worldId}`);
+    }
+
+    // Удалить одну карту (локации этой карты удалятся каскадно)
+    async deleteMap(mapId) {
+        const map = await this.getMap(mapId);
+
+        if (map.image_path) {
+            await supabase.storage.from('map-images').remove([map.image_path]);
+        }
+
+        const { error } = await supabase
+            .from('maps')
+            .delete()
+            .eq('id', mapId);
+
+        if (error) {
+            console.error('❌ Error deleting map:', error);
+            throw error;
+        }
+
+        console.log(`🗑️ Map deleted: ${mapId}`);
+    }
 }
 
 export default new WorldsService();

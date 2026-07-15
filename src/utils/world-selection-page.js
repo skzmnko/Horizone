@@ -5,37 +5,47 @@ class WorldSelectionPage {
     constructor() {
         this.container = null;
         this.onWorldSelected = null;
+        this.worlds = [];
     }
 
     async initialize(onWorldSelected) {
         this.onWorldSelected = onWorldSelected;
-        await this.render();
+        await this.loadAndRender();
+    }
+
+    async loadAndRender() {
+        try {
+            this.worlds = await WorldsService.getMyWorlds();
+
+            // Подтягиваем карты для каждого мира сразу, чтобы список
+            // можно было показать полностью раскрытым без доп. кликов
+            for (const world of this.worlds) {
+                world.maps = await WorldsService.getMapsForWorld(world.id);
+            }
+        } catch (e) {
+            console.error('❌ Failed to load worlds:', e);
+            this.worlds = [];
+        }
+
+        this.render();
         this.bindEvents();
     }
 
-    async render() {
+    render() {
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+
         this.container = document.createElement('div');
         this.container.id = 'world-selection-page';
         this.container.className = 'login-page';
 
-        let worlds = [];
-        try {
-            worlds = await WorldsService.getMyWorlds();
-        } catch (e) {
-            console.error('❌ Failed to load worlds:', e);
-        }
-
-        const worldsListHtml = worlds.length > 0
-            ? worlds.map(w => `
-                <button class="world-item" data-world-id="${w.id}">
-                    <span class="world-item-name">${this.escapeHtml(w.name)}</span>
-                    <span class="world-item-role">${w.role === 'dm' ? '🎲 Мастер' : '🗺️ Игрок'}</span>
-                </button>
-            `).join('')
+        const worldsListHtml = this.worlds.length > 0
+            ? this.worlds.map(w => this.renderWorldBlock(w)).join('')
             : `<div class="world-empty">У тебя пока нет ни одного мира</div>`;
 
         this.container.innerHTML = `
-            <div class="login-container">
+            <div class="login-container" style="max-width:480px;">
                 <div class="login-header">
                     <h1>Твои миры</h1>
                     <p>${AuthService.getCurrentUser()?.displayName || ''}</p>
@@ -68,11 +78,109 @@ class WorldSelectionPage {
         document.body.appendChild(this.container);
     }
 
+    renderWorldBlock(world) {
+        const isDM = world.role === 'dm';
+        const mapsHtml = (world.maps || []).map(map => `
+            <div class="world-map-item" style="display:flex; align-items:center; justify-content:space-between; padding:6px 12px;">
+                <button class="enter-map-btn" data-world-id="${world.id}" data-map-id="${map.id}"
+                    style="background:none; border:none; color:#e5e5e5; cursor:pointer; text-align:left; flex:1;">
+                    🗺️ ${this.escapeHtml(map.name)}${!map.image_path ? ' <span style="color:#a3a3a3;">(нет картинки)</span>' : ''}
+                </button>
+                ${isDM ? `
+                    <button class="delete-map-btn" data-map-id="${map.id}"
+                        title="Удалить карту" style="background:none; border:none; color:#c26b6b; cursor:pointer;">✕</button>
+                ` : ''}
+            </div>
+        `).join('') || `<div style="padding:6px 12px; color:#a3a3a3;">Нет карт</div>`;
+
+        return `
+            <div class="world-block" style="border:1px solid rgba(255,255,255,0.1); border-radius:8px; margin-bottom:10px; overflow:hidden;">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.03);">
+                    <div>
+                        <span class="world-item-name" style="font-weight:600;">${this.escapeHtml(world.name)}</span>
+                        <span class="world-item-role" style="margin-left:8px; color:#a3a3a3; font-size:12px;">
+                            ${isDM ? '🎲 Мастер' : '🗺️ Игрок'}
+                        </span>
+                    </div>
+                    ${isDM ? `
+                        <button class="delete-world-btn" data-world-id="${world.id}"
+                            title="Удалить мир" style="background:none; border:none; color:#c26b6b; cursor:pointer;">🗑</button>
+                    ` : ''}
+                </div>
+                <div class="world-maps">
+                    ${mapsHtml}
+                </div>
+                ${isDM ? `
+                    <div style="padding:6px 12px 10px;">
+                        <button class="add-map-btn" data-world-id="${world.id}"
+                            style="background:none; border:1px dashed rgba(255,255,255,0.3); color:#a3a3a3; cursor:pointer; padding:4px 10px; border-radius:6px; font-size:13px;">
+                            + Добавить карту
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
     bindEvents() {
-        this.container.querySelectorAll('.world-item').forEach(btn => {
+        this.container.querySelectorAll('.enter-map-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const worldId = btn.dataset.worldId;
-                this.selectWorld(worldId);
+                const mapId = btn.dataset.mapId;
+                this.hide();
+                if (this.onWorldSelected) {
+                    this.onWorldSelected({ worldId, mapId });
+                }
+            });
+        });
+
+        this.container.querySelectorAll('.delete-world-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const worldId = btn.dataset.worldId;
+                const world = this.worlds.find(w => w.id === worldId);
+                const confirmed = window.confirm(
+                    `Удалить мир "${world?.name}" со всеми картами и локациями? Это необратимо.`
+                );
+                if (!confirmed) return;
+
+                try {
+                    await WorldsService.deleteWorld(worldId);
+                    await this.loadAndRender();
+                } catch (err) {
+                    this.showError('Не удалось удалить мир: ' + err.message);
+                }
+            });
+        });
+
+        this.container.querySelectorAll('.delete-map-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const mapId = btn.dataset.mapId;
+                const confirmed = window.confirm('Удалить эту карту со всеми локациями на ней? Это необратимо.');
+                if (!confirmed) return;
+
+                try {
+                    await WorldsService.deleteMap(mapId);
+                    await this.loadAndRender();
+                } catch (err) {
+                    this.showError('Не удалось удалить карту: ' + err.message);
+                }
+            });
+        });
+
+        this.container.querySelectorAll('.add-map-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const worldId = btn.dataset.worldId;
+                const name = window.prompt('Название новой карты:', 'Новая карта');
+                if (!name || !name.trim()) return;
+
+                try {
+                    await WorldsService.createMap(worldId, name.trim());
+                    await this.loadAndRender();
+                } catch (err) {
+                    this.showError('Не удалось создать карту: ' + err.message);
+                }
             });
         });
 
@@ -84,8 +192,8 @@ class WorldSelectionPage {
 
             this.hideError();
             try {
-                const worldId = await WorldsService.createWorld(name);
-                await this.selectWorld(worldId);
+                await WorldsService.createWorld(name);
+                await this.loadAndRender();
             } catch (err) {
                 this.showError('Не удалось создать мир: ' + err.message);
             }
@@ -99,8 +207,8 @@ class WorldSelectionPage {
 
             this.hideError();
             try {
-                const worldId = await WorldsService.joinWorldByInviteCode(code);
-                await this.selectWorld(worldId);
+                await WorldsService.joinWorldByInviteCode(code);
+                await this.loadAndRender();
             } catch (err) {
                 this.showError('Неверный или истёкший код приглашения');
             }
@@ -113,35 +221,16 @@ class WorldSelectionPage {
         });
     }
 
-    async selectWorld(worldId) {
-        try {
-            const maps = await WorldsService.getMapsForWorld(worldId);
-            if (!maps || maps.length === 0) {
-                this.showError('В этом мире пока нет ни одной карты');
-                return;
-            }
-
-            // Пока берём первую карту мира — выбор карты внутри мира
-            // можно будет добавить отдельным экраном позже, если карт станет больше одной
-            const mapId = maps[0].id;
-
-            this.hide();
-            if (this.onWorldSelected) {
-                this.onWorldSelected({ worldId, mapId });
-            }
-        } catch (err) {
-            this.showError('Не удалось открыть мир: ' + err.message);
-        }
-    }
-
     showError(message) {
         const errorElement = document.getElementById('world-error');
+        if (!errorElement) return;
         errorElement.textContent = message;
         errorElement.classList.remove('hidden');
     }
 
     hideError() {
         const errorElement = document.getElementById('world-error');
+        if (!errorElement) return;
         errorElement.textContent = '';
         errorElement.classList.add('hidden');
     }
@@ -155,12 +244,6 @@ class WorldSelectionPage {
     hide() {
         if (this.container) {
             this.container.classList.add('hidden');
-        }
-    }
-
-    destroy() {
-        if (this.container && this.container.parentNode) {
-            this.container.parentNode.removeChild(this.container);
         }
     }
 }

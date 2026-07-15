@@ -4,12 +4,14 @@ class MapUploadPage {
     constructor() {
         this.container = null;
         this.onUploaded = null;
+        this.onBack = null;
     }
 
-    initialize(worldId, mapId, onUploaded) {
+    initialize(worldId, mapId, onUploaded, onBack) {
         this.worldId = worldId;
         this.mapId = mapId;
         this.onUploaded = onUploaded;
+        this.onBack = onBack;
         this.render();
         this.bindEvents();
     }
@@ -26,6 +28,9 @@ class MapUploadPage {
                 <input type="file" id="map-image-input" accept="image/*" style="margin:16px 0; color:#fff;">
                 <button id="map-upload-btn" class="login-btn">Загрузить</button>
                 <div id="map-upload-error" class="error-message hidden"></div>
+                <button id="map-upload-back-btn" style="background:none; border:none; color:#a3a3a3; cursor:pointer; margin-top:16px;">
+                    ← Назад к мирам
+                </button>
             </div>
         `;
         document.body.appendChild(this.container);
@@ -52,6 +57,12 @@ class MapUploadPage {
                 btn.disabled = false;
                 btn.textContent = 'Загрузить';
             }
+        });
+
+        const backBtn = document.getElementById('map-upload-back-btn');
+        backBtn.addEventListener('click', () => {
+            this.hide();
+            if (this.onBack) this.onBack();
         });
     }
 
