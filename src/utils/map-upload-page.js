@@ -1,4 +1,5 @@
 import MapImageService from '../services/map-image-service.js';
+import WorldsService from '../services/worlds-service.js';
 
 class MapUploadPage {
     constructor() {
@@ -7,6 +8,8 @@ class MapUploadPage {
         this.onBack = null;
     }
 
+    // mapId может быть null — тогда карта ещё не существует в БД и будет
+    // создана прямо в момент нажатия "Загрузить", одновременно с картинкой
     initialize(worldId, mapId, onUploaded, onBack) {
         this.worldId = worldId;
         this.mapId = mapId;
@@ -38,32 +41,57 @@ class MapUploadPage {
 
     bindEvents() {
         const btn = document.getElementById('map-upload-btn');
-        btn.addEventListener('click', async () => {
-            const input = document.getElementById('map-image-input');
-            const file = input.files[0];
-            if (!file) return;
-
-            btn.disabled = true;
-            btn.textContent = 'Загрузка...';
-
-            try {
-                const map = await MapImageService.uploadMapImage(file, this.worldId, this.mapId);
-                this.hide();
-                if (this.onUploaded) this.onUploaded(map);
-            } catch (err) {
-                const errorEl = document.getElementById('map-upload-error');
-                errorEl.textContent = 'Ошибка загрузки: ' + err.message;
-                errorEl.classList.remove('hidden');
-                btn.disabled = false;
-                btn.textContent = 'Загрузить';
-            }
-        });
+        btn.addEventListener('click', () => this.handleUpload(btn));
 
         const backBtn = document.getElementById('map-upload-back-btn');
         backBtn.addEventListener('click', () => {
             this.hide();
             if (this.onBack) this.onBack();
         });
+    }
+
+    async handleUpload(btn) {
+        const input = document.getElementById('map-image-input');
+        const file = input.files[0];
+        if (!file) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Загрузка...';
+
+        let mapId = this.mapId;
+        let mapCreatedNow = false;
+
+        try {
+            // Карты в БД ещё нет — создаём её только сейчас, вместе с картинкой,
+            // а не заранее в момент простого клика по миру
+            if (!mapId) {
+                const map = await WorldsService.createMap(this.worldId, 'Карта мира');
+                mapId = map.id;
+                mapCreatedNow = true;
+            }
+
+            const updatedMap = await MapImageService.uploadMapImage(file, this.worldId, mapId);
+
+            this.hide();
+            if (this.onUploaded) this.onUploaded(updatedMap);
+
+        } catch (err) {
+            // Если картинка не загрузилась, а карту мы только что создали —
+            // не оставляем в базе пустую карту без картинки, откатываем создание
+            if (mapCreatedNow && mapId) {
+                try {
+                    await WorldsService.deleteMap(mapId);
+                } catch (cleanupErr) {
+                    console.warn('⚠️ Failed to clean up empty map after upload error:', cleanupErr);
+                }
+            }
+
+            const errorEl = document.getElementById('map-upload-error');
+            errorEl.textContent = 'Ошибка загрузки: ' + err.message;
+            errorEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Загрузить';
+        }
     }
 
     hide() {

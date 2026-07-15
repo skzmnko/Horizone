@@ -20,8 +20,9 @@ class LoginPage {
         this.container.innerHTML = `
             <div class="login-container">
                 <div class="login-header">
-                    <h1>World of Orasca</h1>
-                    <p>Интерактивная карта Осколков Ораски</p>
+                    <img src="/logo.png" alt="Trace & Place" style="width:72px; height:72px; object-fit:contain; display:block; margin:0 auto 12px;">
+                    <h1>Trace & Place</h1>
+                    <p>Interactive Maps</p>
                 </div>
 
                 <form id="login-form" class="login-form">

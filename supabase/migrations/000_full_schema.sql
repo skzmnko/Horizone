@@ -1,7 +1,8 @@
 -- =====================================================================
--- Orasca Map SaaS — полное развёртывание БД с нуля
--- Выполнять в Supabase SQL Editor одним файлом (сверху вниз), либо
--- блоками — порядок между блоками важен, внутри блока порядок неважен.
+-- Trace & Place — полное развёртывание БД с нуля.
+-- Идемпотентно: безопасно выполнять повторно на базе, где схема уже
+-- создана (например, при автоматическом прогоне миграций из git) —
+-- ничего не упадёт с ошибкой "already exists".
 -- =====================================================================
 
 
@@ -15,14 +16,15 @@ create extension if not exists "pgcrypto";
 -- 2. ТАБЛИЦЫ
 -- =====================================================================
 
-create table worlds (
+create table if not exists worlds (
     id uuid primary key default gen_random_uuid(),
     owner_id uuid references auth.users(id) not null,
     name text not null,
+    cover_image_path text,
     created_at timestamptz default now()
 );
 
-create table world_members (
+create table if not exists world_members (
     world_id uuid references worlds(id) on delete cascade,
     user_id uuid references auth.users(id) on delete cascade,
     role text check (role in ('dm', 'player')) not null default 'player',
@@ -30,7 +32,7 @@ create table world_members (
     primary key (world_id, user_id)
 );
 
-create table maps (
+create table if not exists maps (
     id uuid primary key default gen_random_uuid(),
     world_id uuid references worlds(id) on delete cascade,
     name text not null,
@@ -40,7 +42,7 @@ create table maps (
     created_at timestamptz default now()
 );
 
-create table locations (
+create table if not exists locations (
     id uuid primary key default gen_random_uuid(),
     map_id uuid references maps(id) on delete cascade,
     type text not null,
@@ -59,7 +61,7 @@ create table locations (
     updated_at timestamptz default now()
 );
 
-create table world_invites (
+create table if not exists world_invites (
     id uuid primary key default gen_random_uuid(),
     world_id uuid references worlds(id) on delete cascade,
     code text unique not null,
@@ -67,9 +69,12 @@ create table world_invites (
     expires_at timestamptz
 );
 
+-- На случай если таблица worlds была создана раньше без этой колонки
+alter table worlds add column if not exists cover_image_path text;
+
 
 -- =====================================================================
--- 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (используются в RLS-политиках)
+-- 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (create or replace — уже идемпотентно)
 -- =====================================================================
 
 create or replace function is_world_member(_world_id uuid)
@@ -90,10 +95,12 @@ $$ language sql security definer stable;
 
 
 -- =====================================================================
--- 4. RPC-ФУНКЦИИ (многошаговые атомарные операции)
+-- 4. RPC-ФУНКЦИИ
 -- =====================================================================
 
--- Создание мира: сам мир + мастер как участник + карта по умолчанию
+-- Создание мира: сам мир + мастер как участник.
+-- Карта НЕ создаётся автоматически — DM создаёт её явно при загрузке
+-- картинки, чтобы в базе не оставалось "пустых" карт без изображения.
 create or replace function create_world(_name text)
 returns uuid
 language plpgsql
@@ -113,7 +120,6 @@ begin
 end;
 $$;
 
--- Присоединение к миру по инвайт-коду
 create or replace function redeem_invite(_code text)
 returns uuid
 language plpgsql
@@ -141,7 +147,7 @@ $$;
 
 
 -- =====================================================================
--- 5. ВКЛЮЧИТЬ ROW LEVEL SECURITY
+-- 5. ВКЛЮЧИТЬ ROW LEVEL SECURITY (идемпотентно само по себе)
 -- =====================================================================
 
 alter table worlds enable row level security;
@@ -152,58 +158,58 @@ alter table world_invites enable row level security;
 
 
 -- =====================================================================
--- 6. RLS-ПОЛИТИКИ: worlds
+-- 6-10. RLS-ПОЛИТИКИ
+-- Паттерн "drop if exists + create" делает создание политик идемпотентным
+-- (обычный "create policy" падает с ошибкой, если политика с таким
+-- именем уже есть).
 -- =====================================================================
 
+drop policy if exists "Members can view their worlds" on worlds;
 create policy "Members can view their worlds"
 on worlds for select
 using (is_world_member(id));
 
+drop policy if exists "Authenticated users can create world" on worlds;
 create policy "Authenticated users can create world"
 on worlds for insert
 with check (owner_id = auth.uid());
 
+drop policy if exists "Owner can update their world" on worlds;
 create policy "Owner can update their world"
 on worlds for update
 using (owner_id = auth.uid());
 
+drop policy if exists "Owner can delete their world" on worlds;
 create policy "Owner can delete their world"
 on worlds for delete
 using (owner_id = auth.uid());
 
 
--- =====================================================================
--- 7. RLS-ПОЛИТИКИ: world_members
--- =====================================================================
-
+drop policy if exists "Members can view membership of their worlds" on world_members;
 create policy "Members can view membership of their worlds"
 on world_members for select
 using (is_world_member(world_id));
 
+drop policy if exists "DM can manage members" on world_members;
 create policy "DM can manage members"
 on world_members for all
 using (is_world_dm(world_id))
 with check (is_world_dm(world_id));
 
 
--- =====================================================================
--- 8. RLS-ПОЛИТИКИ: maps
--- =====================================================================
-
+drop policy if exists "Members can view maps" on maps;
 create policy "Members can view maps"
 on maps for select
 using (is_world_member(world_id));
 
+drop policy if exists "DM can manage maps" on maps;
 create policy "DM can manage maps"
 on maps for all
 using (is_world_dm(world_id))
 with check (is_world_dm(world_id));
 
 
--- =====================================================================
--- 9. RLS-ПОЛИТИКИ: locations (ключевая логика видимости для игроков)
--- =====================================================================
-
+drop policy if exists "Members can view visible locations" on locations;
 create policy "Members can view visible locations"
 on locations for select
 using (
@@ -217,6 +223,7 @@ using (
   )
 );
 
+drop policy if exists "DM can manage locations" on locations;
 create policy "DM can manage locations"
 on locations for all
 using (
@@ -227,17 +234,13 @@ with check (
 );
 
 
--- =====================================================================
--- 10. RLS-ПОЛИТИКИ: world_invites
--- =====================================================================
-
+drop policy if exists "DM can manage invites" on world_invites;
 create policy "DM can manage invites"
 on world_invites for all
 using (is_world_dm(world_id))
 with check (is_world_dm(world_id));
 
--- Разрешаем любому авторизованному ИСКАТЬ инвайт по коду —
--- иначе redeem_invite() не сможет прочитать чужой ещё мир по коду
+drop policy if exists "Authenticated users can look up invite by code" on world_invites;
 create policy "Authenticated users can look up invite by code"
 on world_invites for select
 using (auth.role() = 'authenticated');
@@ -245,17 +248,33 @@ using (auth.role() = 'authenticated');
 
 -- =====================================================================
 -- 11. REALTIME
+-- "alter publication ... add table" падает с ошибкой, если таблица уже
+-- в публикации — оборачиваем в проверку через pg_publication_tables.
 -- =====================================================================
 
-alter publication supabase_realtime add table locations;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'locations'
+  ) then
+    alter publication supabase_realtime add table locations;
+  end if;
+end $$;
 
 
 -- =====================================================================
--- 12. STORAGE — бакет для картинок карт
+-- 12. STORAGE — бакеты
 -- =====================================================================
 
 insert into storage.buckets (id, name, public)
 values ('map-images', 'map-images', true)
+on conflict (id) do nothing;
+
+insert into storage.buckets (id, name, public)
+values ('world-covers', 'world-covers', true)
 on conflict (id) do nothing;
 
 
@@ -263,13 +282,12 @@ on conflict (id) do nothing;
 -- 13. STORAGE — RLS-политики
 -- =====================================================================
 
--- SELECT открыт всем: бакет публичный, картинки карт не секретны,
--- к тому же это требуется технически (Storage делает RETURNING после
--- insert/update, для чего обязательно нужна select-политика)
+drop policy if exists "Anyone can read map images" on storage.objects;
 create policy "Anyone can read map images"
 on storage.objects for select
 using (bucket_id = 'map-images');
 
+drop policy if exists "DM can upload map images for their worlds" on storage.objects;
 create policy "DM can upload map images for their worlds"
 on storage.objects for insert
 with check (
@@ -277,6 +295,7 @@ with check (
   and is_world_dm((storage.foldername(name))[1]::uuid)
 );
 
+drop policy if exists "DM can update their map images" on storage.objects;
 create policy "DM can update their map images"
 on storage.objects for update
 using (
@@ -288,6 +307,7 @@ with check (
   and is_world_dm((storage.foldername(name))[1]::uuid)
 );
 
+drop policy if exists "DM can delete their map images" on storage.objects;
 create policy "DM can delete their map images"
 on storage.objects for delete
 using (
@@ -295,6 +315,39 @@ using (
   and is_world_dm((storage.foldername(name))[1]::uuid)
 );
 
+drop policy if exists "Anyone can read world covers" on storage.objects;
+create policy "Anyone can read world covers"
+on storage.objects for select
+using (bucket_id = 'world-covers');
+
+drop policy if exists "DM can upload cover for their world" on storage.objects;
+create policy "DM can upload cover for their world"
+on storage.objects for insert
+with check (
+  bucket_id = 'world-covers'
+  and is_world_dm((storage.foldername(name))[1]::uuid)
+);
+
+drop policy if exists "DM can update their world cover" on storage.objects;
+create policy "DM can update their world cover"
+on storage.objects for update
+using (
+  bucket_id = 'world-covers'
+  and is_world_dm((storage.foldername(name))[1]::uuid)
+)
+with check (
+  bucket_id = 'world-covers'
+  and is_world_dm((storage.foldername(name))[1]::uuid)
+);
+
+drop policy if exists "DM can delete their world cover" on storage.objects;
+create policy "DM can delete their world cover"
+on storage.objects for delete
+using (
+  bucket_id = 'world-covers'
+  and is_world_dm((storage.foldername(name))[1]::uuid)
+);
+
 -- =====================================================================
--- Конец. После выполнения — таблицы, функции, RLS и Storage готовы.
+-- Конец.
 -- =====================================================================

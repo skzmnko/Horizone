@@ -5,7 +5,7 @@ class WorldsService {
     async getMyWorlds() {
         const { data, error } = await supabase
             .from('world_members')
-            .select('role, joined_at, worlds(id, name, created_at)')
+            .select('role, joined_at, worlds(id, name, created_at, cover_image_path)')
             .order('joined_at', { ascending: false });
 
         if (error) {
@@ -17,7 +17,8 @@ class WorldsService {
             id: row.worlds.id,
             name: row.worlds.name,
             role: row.role,
-            createdAt: row.worlds.created_at
+            createdAt: row.worlds.created_at,
+            coverImagePath: row.worlds.cover_image_path
         }));
     }
 
@@ -140,6 +141,17 @@ class WorldsService {
         } else if (files && files.length > 0) {
             const paths = files.map(f => `${worldId}/${f.name}`);
             await supabase.storage.from('map-images').remove(paths);
+        }
+
+        const { data: coverFiles, error: coverListError } = await supabase.storage
+            .from('world-covers')
+            .list(worldId);
+
+        if (coverListError) {
+            console.warn('⚠️ Could not list world cover files before delete:', coverListError);
+        } else if (coverFiles && coverFiles.length > 0) {
+            const coverPaths = coverFiles.map(f => `${worldId}/${f.name}`);
+            await supabase.storage.from('world-covers').remove(coverPaths);
         }
 
         const { error } = await supabase

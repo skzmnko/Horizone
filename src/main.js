@@ -78,6 +78,27 @@ class Application {
     }
 
     async resolveMapAndProceed(worldId, mapId) {
+        if (!mapId) {
+            if (AuthService.isDM()) {
+                const mapUploadPage = new MapUploadPage();
+                mapUploadPage.initialize(
+                    worldId,
+                    null,
+                    (map) => {
+                        this.currentMapId = map.id;
+                        this.mapImageUrl = MapImageService.getPublicUrl(map.image_path);
+                        this.mapWidth = map.width;
+                        this.mapHeight = map.height;
+                        this.initializeApp();
+                    },
+                    () => { this.showWorldSelectionPage(); }
+                );
+            } else {
+                this.showWaitingForMapMessage();
+            }
+            return;
+        }
+
         const map = await WorldsService.getMap(mapId);
 
         if (!map.image_path) {
@@ -174,6 +195,10 @@ class Application {
         this.updateMobileDMButtonVisibility();
         this.addBackToWorldsButton();
 
+        if (AuthService.isDM()) {
+            this.addReuploadMapButton();
+        }
+
         if (AuthService.isDM() && !this.isMobile) {
             this.dmToolsPanel = DMToolsPanel;
             this.dmToolsPanel.initialize();
@@ -225,6 +250,47 @@ class Application {
             window.location.reload();
         });
         document.body.appendChild(btn);
+    }
+
+    addReuploadMapButton() {
+        const btn = document.createElement('button');
+        btn.id = 'reupload-map-btn';
+        btn.textContent = '🔄 Обновить карту мира';
+        btn.title = 'Загрузить новое изображение карты';
+        btn.style.cssText = `
+            position: fixed;
+            top: 12px;
+            left: 100px;
+            z-index: 10000;
+            background: rgba(0,0,0,0.75);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+        `;
+        btn.addEventListener('click', () => {
+            this.showReuploadMapOverlay();
+        });
+        document.body.appendChild(btn);
+    }
+
+    showReuploadMapOverlay() {
+        const mapUploadPage = new MapUploadPage();
+        mapUploadPage.initialize(
+            this.currentWorldId,
+            this.currentMapId,
+            () => {
+                // Проще всего перезагрузить страницу — она сама подхватит
+                // новую картинку карты через уже отработанный поток входа
+                window.location.reload();
+            },
+            () => {
+                mapUploadPage.hide();
+            }
+        );
     }
 
     updateMobileDMButtonVisibility() {
