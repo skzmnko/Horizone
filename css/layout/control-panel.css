@@ -1,0 +1,95 @@
+/* Control Panel Layout */
+
+.control-panel-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 25%;
+    min-width: 320px;
+    max-width: 450px;
+    display: flex;
+    align-items: stretch;
+    z-index: 1000;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.control-panel-container.hidden {
+    transform: translateX(-100%);
+}
+
+.control-panel-container.unified-panel {
+    width: 25%;
+    min-width: 320px;
+    max-width: 450px;
+    height: 100vh;
+}
+
+#control-panel {
+    background: var(--mg-bg-panel);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--mg-border);
+    border-left: none;
+    border-radius: 0;
+    box-shadow: var(--mg-shadow-lg);
+    color: var(--mg-text-primary);
+    padding: 24px 28px;
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--mg-border);
+    position: relative;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.panel-header h3 {
+    color: var(--mg-text-accent);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    padding: 0;
+    border: none;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    flex: 1;
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(26, 127, 127, 0.3);
+}
+
+.layers-section {
+    margin-bottom: 24px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.layers-section h4 {
+    color: var(--mg-text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 12px 0;
+    font-weight: 600;
+}
+
+.map-controls {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid var(--mg-border);
+    flex-shrink: 0;
+}

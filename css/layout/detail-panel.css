@@ -1,0 +1,405 @@
+/* Detail Panel Layout */
+
+.detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 25%;
+    min-width: 320px;
+    max-width: 450px;
+    height: 100vh;
+    background: var(--mg-bg-panel);
+    backdrop-filter: blur(15px);
+    border-left: 1px solid var(--mg-border);
+    box-shadow: var(--mg-shadow-lg);
+    z-index: 2000;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.detail-panel.visible {
+    transform: translateX(0);
+}
+
+.detail-panel.hidden {
+    transform: translateX(100%);
+}
+
+.detail-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 2px solid var(--mg-border);
+    background: var(--mg-popup-header-bg);
+    flex-shrink: 0;
+}
+
+.detail-panel-header h3 {
+    color: var(--mg-text-accent);
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    font-size: 1.2rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(26, 127, 127, 0.3);
+}
+
+.detail-panel-player .detail-panel-header h3 {
+    font-size: 1.1rem;
+    letter-spacing: 0.8px;
+}
+
+.detail-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.detail-panel-loading {
+    color: var(--mg-text-secondary);
+    text-align: center;
+    padding: 60px 0;
+    font-style: italic;
+    font-size: 1.05rem;
+}
+
+/* Location Details */
+.detail-panel-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-panel-item-player {
+    gap: 6px;
+}
+
+.detail-panel-name {
+    color: var(--mg-text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--mg-border);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+}
+
+.detail-panel-item-player .detail-panel-name {
+    font-size: 1.3rem;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+}
+
+.detail-panel-alias {
+    color: var(--mg-text-secondary);
+    font-size: 1.05rem;
+    font-style: italic;
+    margin-top: -2px;
+    padding-bottom: 2px;
+}
+
+.detail-panel-item-player .detail-panel-alias {
+    font-size: 0.95rem;
+    margin-top: -2px;
+    padding-bottom: 2px;
+}
+
+.detail-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Inline section - label and value on same line */
+.detail-panel-section-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+    padding: 1px 0;
+    flex-wrap: wrap;
+}
+
+.detail-panel-section-description {
+    gap: 1px;
+}
+
+.detail-panel-label {
+    color: var(--mg-text-secondary);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.detail-panel-value {
+    color: var(--mg-text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Inline value - displayed immediately after label */
+.detail-panel-value-inline {
+    color: var(--mg-text-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.detail-panel-description-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.detail-panel-description-text {
+    color: var(--mg-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 72px;
+    transition: max-height 0.4s ease, -webkit-line-clamp 0.4s ease;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-indent: 0 !important;
+    /* Standard property for compatibility */
+    line-clamp: 4;
+}
+
+/* Expanded state for text */
+.detail-panel-description-text.expanded {
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: vertical;
+    overflow: visible !important;
+    max-height: none !important;
+    /* Standard property for compatibility */
+    line-clamp: unset !important;
+}
+
+/* Expanded state for wrapper */
+.detail-panel-description-wrapper.expanded .detail-panel-description-text {
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: vertical;
+    overflow: visible !important;
+    max-height: none !important;
+    /* Standard property for compatibility */
+    line-clamp: unset !important;
+}
+
+/* Toggle button */
+.detail-panel-description-toggle {
+    background: none;
+    border: none;
+    color: var(--mg-text-accent);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 2px 0;
+    margin-top: 0;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: fit-content;
+    font-family: inherit;
+    align-self: flex-start;
+    opacity: 0.8;
+}
+
+.detail-panel-description-toggle:hover {
+    color: var(--mg-accent-hover);
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(26, 127, 127, 0.3);
+}
+
+.detail-panel-description-toggle:active {
+    transform: scale(0.98);
+}
+
+/* Status indicators */
+.status-known {
+    color: #4caf50;
+    font-weight: 500;
+}
+
+.status-hidden {
+    color: #ff6b6b;
+    font-weight: 500;
+}
+
+.detail-panel-coords {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--mg-text-muted);
+    background: var(--mg-bg-secondary);
+    padding: 2px 6px;
+    border-radius: var(--mg-radius-sm);
+    display: inline-block;
+}
+
+.detail-panel-id {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--mg-text-muted);
+    background: var(--mg-bg-secondary);
+    padding: 2px 6px;
+    border-radius: var(--mg-radius-sm);
+    display: inline-block;
+}
+
+.detail-panel-image {
+    margin-top: 4px;
+}
+
+.detail-panel-image img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: var(--mg-radius-lg);
+    border: 1px solid var(--mg-border);
+}
+
+.detail-panel-image img[style*="display: none"] {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detail-panel {
+        width: 100%;
+        max-width: none;
+        min-width: auto;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        border-radius: 0;
+        border-left: none;
+    }
+    
+    .detail-panel-header {
+        padding: 14px 18px;
+    }
+    
+    .detail-panel-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .detail-panel-content {
+        padding: 18px;
+    }
+    
+    .detail-panel-item {
+        gap: 4px;
+    }
+    
+    .detail-panel-item-player {
+        gap: 4px;
+    }
+    
+    .detail-panel-name {
+        font-size: 1.3rem;
+        padding-bottom: 4px;
+        margin-bottom: 2px;
+    }
+    
+    .detail-panel-item-player .detail-panel-name {
+        font-size: 1.2rem;
+        padding-bottom: 4px;
+        margin-bottom: 2px;
+    }
+    
+    .detail-panel-alias {
+        font-size: 0.95rem;
+        margin-top: -2px;
+    }
+    
+    .detail-panel-description-text {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        max-height: 60px;
+        line-clamp: 4;
+    }
+    
+    .detail-panel-value-inline {
+        font-size: 0.95rem;
+    }
+    
+    .detail-panel-label {
+        font-size: 0.95rem;
+    }
+    
+    .detail-panel-section-inline {
+        gap: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-panel-header {
+        padding: 12px 14px;
+    }
+    
+    .detail-panel-header h3 {
+        font-size: 1rem;
+    }
+    
+    .detail-panel-content {
+        padding: 14px;
+    }
+    
+    .detail-panel-item {
+        gap: 3px;
+    }
+    
+    .detail-panel-item-player {
+        gap: 3px;
+    }
+    
+    .detail-panel-name {
+        font-size: 1.1rem;
+        padding-bottom: 4px;
+        margin-bottom: 1px;
+    }
+    
+    .detail-panel-item-player .detail-panel-name {
+        font-size: 1rem;
+    }
+    
+    .detail-panel-alias {
+        font-size: 0.85rem;
+        margin-top: -2px;
+    }
+    
+    .detail-panel-description-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+        max-height: 48px;
+        line-clamp: 4;
+    }
+    
+    .detail-panel-value-inline {
+        font-size: 0.9rem;
+    }
+    
+    .detail-panel-label {
+        font-size: 0.9rem;
+    }
+    
+    .detail-panel-section-inline {
+        gap: 3px;
+        padding: 0;
+    }
+}

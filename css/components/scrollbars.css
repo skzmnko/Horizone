@@ -1,0 +1,135 @@
+/* Scrollbars Component */
+
+/* Control Panel Scrollbar */
+#control-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#control-panel::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 40px 0;
+}
+
+#control-panel::-webkit-scrollbar-thumb {
+    background: var(--mg-border);
+    border-radius: var(--mg-radius-sm);
+    border: 2px solid var(--mg-bg-panel);
+}
+
+#control-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--mg-accent-muted);
+}
+
+#control-panel {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mg-border) transparent;
+}
+
+#control-panel:hover {
+    scrollbar-color: var(--mg-accent-muted) transparent;
+}
+
+/* Detail Panel Scrollbar */
+.detail-panel-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.detail-panel-content::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+}
+
+.detail-panel-content::-webkit-scrollbar-thumb {
+    background: var(--mg-border);
+    border-radius: var(--mg-radius-sm);
+    border: 2px solid var(--mg-bg-panel);
+}
+
+.detail-panel-content::-webkit-scrollbar-thumb:hover {
+    background: var(--mg-accent-muted);
+}
+
+.detail-panel-content {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mg-border) transparent;
+}
+
+.detail-panel-content:hover {
+    scrollbar-color: var(--mg-accent-muted) transparent;
+}
+
+/* Description Scrollbar */
+.detail-panel-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.detail-panel-description::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.detail-panel-description::-webkit-scrollbar-thumb {
+    background: var(--mg-border);
+    border-radius: 3px;
+}
+
+.detail-panel-description::-webkit-scrollbar-thumb:hover {
+    background: var(--mg-accent-muted);
+}
+
+/* Search Results Scrollbar */
+#search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+#search-results::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+}
+
+#search-results::-webkit-scrollbar-thumb {
+    background: var(--mg-border);
+    border-radius: 3px;
+    border: 1px solid var(--mg-bg-secondary);
+}
+
+#search-results::-webkit-scrollbar-thumb:hover {
+    background: var(--mg-accent-muted);
+}
+
+#search-results {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mg-border) transparent;
+}
+
+#search-results:hover {
+    scrollbar-color: var(--mg-accent-muted) transparent;
+}
+
+/* Mobile Search Results Scrollbar */
+#mobile-search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+#mobile-search-results::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+}
+
+#mobile-search-results::-webkit-scrollbar-thumb {
+    background: var(--mg-border);
+    border-radius: 3px;
+    border: 1px solid var(--mg-bg-secondary);
+}
+
+#mobile-search-results::-webkit-scrollbar-thumb:hover {
+    background: var(--mg-accent-muted);
+}
+
+#mobile-search-results {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mg-border) transparent;
+}
+
+#mobile-search-results:hover {
+    scrollbar-color: var(--mg-accent-muted) transparent;
+}
