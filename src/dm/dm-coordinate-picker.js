@@ -1,4 +1,4 @@
-import MapService from '../map-service.js';
+import MapService from '../services/map-service.js';
 
 class DMCoordinatePicker {
     constructor() {

@@ -1,13 +1,173 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>snap-n-map</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orasca Interactive Map</title>
+
+    <link rel="preload" href="css/vendor/leaflet.css" as="style">
+    <link rel="preload" href="css/style.css" as="style">
+
+    <link rel="stylesheet" href="css/vendor/leaflet.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <link rel="icon" href="data:,">
+</head>
+<body>
+    
+    <div class="map-background"></div>
+    
+    <div id="map"></div>
+
+    <!-- Desktop Profile Button -->
+    <button id="desktop-profile-btn" class="desktop-profile-btn" title="Профиль">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+        </svg>
+    </button>
+
+    <!-- Profile Panel -->
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-panel-content">
+            <div class="profile-user-info">
+                <div class="profile-avatar">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="profile-user-details">
+                    <div class="profile-username" id="profile-username">Пользователь</div>
+                    <div class="profile-role" id="profile-role">Роль</div>
+                </div>
+            </div>
+            <button id="profile-logout-btn" class="profile-logout-btn">Выйти</button>
+        </div>
+    </div>
+
+    <div class="mobile-top-panel" id="mobile-top-panel">
+        <div class="mobile-panel-title">World of Orasca</div>
+        <div class="mobile-panel-actions">
+            <!-- DM Tools Mobile Button (shown only for DM users via JS) -->
+            <button id="mobile-dm-tools-btn" class="mobile-dm-tools-btn" title="DM Инструменты" data-dm-only="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+            </button>
+            <button id="mobile-filter-btn" class="mobile-filter-btn" title="Панель фильтров">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3"/>
+                </svg>
+            </button>
+            <button id="mobile-search-btn" class="mobile-search-btn" title="Поиск">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </button>
+            <!-- Mobile Reset View Button -->
+            <button id="mobile-reset-btn" class="mobile-reset-btn" title="Сбросить вид">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" fill="none"/>
+                    <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+                    <line x1="12" y1="1" x2="12" y2="4.5"/>
+                    <line x1="12" y1="19.5" x2="12" y2="23"/>
+                    <line x1="1" y1="12" x2="4.5" y2="12"/>
+                    <line x1="19.5" y1="12" x2="23" y2="12"/>
+                    <circle cx="12" cy="12" r="12" stroke="none" fill="rgba(26, 127, 127, 0.1)" opacity="0"/>
+                </svg>
+            </button>
+            <!-- Mobile Profile Button -->
+            <button id="mobile-profile-btn" class="mobile-profile-btn" title="Профиль">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="mobile-search-panel" id="mobile-search-panel">
+        <div class="mobile-search-container">
+            <input type="text" id="mobile-search" placeholder="Поиск локаций...">
+        </div>
+        <div id="mobile-search-results" class="mobile-search-results"></div>
+    </div>
+
+    <button id="panel-open-btn" class="panel-open-btn hidden" title="Открыть панель">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3"/>
+        </svg>
+    </button>
+
+    <div class="control-panel-container" id="control-panel-container">
+        <div id="control-panel">
+            <div class="panel-header" id="panel-header">
+                <h3>World of Orasca Interactive Map</h3>
+                <button id="panel-close-btn" class="panel-close-btn" title="Закрыть панель">✕</button>
+            </div>
+            
+            <div class="search-section desktop-search" id="desktop-search">
+                <input type="text" id="search" placeholder="Поиск...">
+                <div id="search-results"></div>
+            </div>
+
+            <div class="all-layers-control">
+                <span id="show-all-layers" class="layer-toggle-btn">ПОКАЗАТЬ ВСЕ</span>
+                <span id="hide-all-layers" class="layer-toggle-btn">СКРЫТЬ ВСЕ</span>
+            </div>
+
+            <div class="layers-section">
+                <h4>ЛОКАЦИИ</h4>
+                <div class="layer-control">
+                    <input type="checkbox" id="cities-layer" checked> 
+                    <label for="cities-layer"><img src="images/icons/cities.png" class="legend-icon" alt="Города"> Города</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="settlements-layer" checked> 
+                    <label for="settlements-layer"><img src="images/icons/settlements.png" class="legend-icon" alt="Поселения"> Поселения</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="forts-layer" checked> 
+                    <label for="forts-layer"><img src="images/icons/forts.png" class="legend-icon" alt="Форты"> Форты</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="feyspires-layer" checked> 
+                    <label for="feyspires-layer"><img src="images/icons/feyspires.png" class="legend-icon" alt="Фейские Шпили"> Фейские Шпили</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="shrines-layer" checked> 
+                    <label for="shrines-layer"><img src="images/icons/shrines.png" class="legend-icon" alt="Храмы"> Храмы</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="ruins-layer" checked> 
+                    <label for="ruins-layer"><img src="images/icons/ruins.png" class="legend-icon" alt="Руины"> Руины</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="dungeons-layer" checked> 
+                    <label for="dungeons-layer"><img src="images/icons/dungeons.png" class="legend-icon" alt="Подземелья"> Подземелья</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="poi-layer" checked> 
+                    <label for="poi-layer"><img src="images/icons/poi.png" class="legend-icon" alt="Точки интереса"> Точки интереса</label>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="secrets-layer" checked> 
+                    <label for="secrets-layer"><img src="images/icons/secrets.png" class="legend-icon" alt="Секреты"> Секреты</label>
+                </div>
+
+                <div class="map-controls">
+                    <button id="reset-view">СБРОСИТЬ ВИД</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dm-tools-panel-container"></div>
+
+    <script type="module" src="src/main.js" defer></script>
+
+</body>
 </html>
