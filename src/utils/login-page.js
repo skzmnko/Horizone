@@ -20,7 +20,7 @@ class LoginPage {
         this.container.innerHTML = `
             <div class="login-container">
                 <div class="login-header">
-                    <img src="/logo.png" alt="Trace & Place" style="width:72px; height:72px; object-fit:contain; display:block; margin:0 auto 12px;">
+                    <img src="/logo.png" alt="Trace & Place" style="width:120px; height:120px; object-fit:contain; display:block; margin:0 auto 12px;">
                     <h1>Trace & Place</h1>
                     <p>Interactive Maps</p>
                 </div>

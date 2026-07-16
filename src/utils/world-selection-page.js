@@ -39,8 +39,8 @@ class WorldSelectionPage {
                 position: relative;
             }
             .tp-logo-img {
-                width: 84px;
-                height: 84px;
+                width: 160px;
+                height: 160px;
                 object-fit: contain;
                 display: block;
                 margin: 0 auto 8px;
