@@ -25,3 +25,7 @@
 
 /* 6. DM Tools */
 @import url('components/dm-tools.css');
+
+/* 7. Pages & floating UI (Trace & Place redesign) */
+@import url('pages/world-selection.css');
+@import url('components/floating-buttons.css');

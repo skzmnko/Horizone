@@ -28,10 +28,10 @@ class MapUploadPage {
                     <h1>Загрузи карту мира</h1>
                     <p>В этом мире пока нет изображения карты</p>
                 </div>
-                <input type="file" id="map-image-input" accept="image/*" style="margin:16px 0; color:#fff;">
+                <input type="file" id="map-image-input" accept="image/*" class="file-input">
                 <button id="map-upload-btn" class="login-btn">Загрузить</button>
                 <div id="map-upload-error" class="error-message hidden"></div>
-                <button id="map-upload-back-btn" style="background:none; border:none; color:#a3a3a3; cursor:pointer; margin-top:16px;">
+                <button id="map-upload-back-btn" class="login-back-link">
                     ← Назад к мирам
                 </button>
             </div>

@@ -131,7 +131,7 @@ class Application {
                     <h1>Карта ещё не готова</h1>
                     <p>Мастер пока не загрузил изображение карты для этого мира</p>
                 </div>
-                <button id="back-to-worlds-from-waiting" class="login-btn" style="margin-top:16px;">
+                <button id="back-to-worlds-from-waiting" class="login-btn">
                     ← Назад к мирам
                 </button>
             </div>
@@ -221,25 +221,23 @@ class Application {
         window.dmToolsPanel = DMToolsPanel;
     }
 
+    getFloatingBtnGroup() {
+        let group = document.getElementById('floating-btn-group');
+        if (!group) {
+            group = document.createElement('div');
+            group.id = 'floating-btn-group';
+            group.className = 'floating-btn-group';
+            document.body.appendChild(group);
+        }
+        return group;
+    }
+
     addBackToWorldsButton() {
         const btn = document.createElement('button');
         btn.id = 'back-to-worlds-btn';
+        btn.className = 'floating-btn';
         btn.textContent = '← Миры';
         btn.title = 'Вернуться к списку миров';
-        btn.style.cssText = `
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 10000;
-            background: rgba(0,0,0,0.75);
-            color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 6px;
-            padding: 8px 14px;
-            cursor: pointer;
-            font-size: 14px;
-            backdrop-filter: blur(4px);
-        `;
         btn.addEventListener('click', () => {
             // Полная перезагрузка — самый надёжный способ корректно
             // разобрать карту и все связанные с ней UI-сервисы
@@ -249,32 +247,19 @@ class Application {
             // а не форма логина.
             window.location.reload();
         });
-        document.body.appendChild(btn);
+        this.getFloatingBtnGroup().appendChild(btn);
     }
 
     addReuploadMapButton() {
         const btn = document.createElement('button');
         btn.id = 'reupload-map-btn';
+        btn.className = 'floating-btn';
         btn.textContent = '🔄 Обновить карту мира';
         btn.title = 'Загрузить новое изображение карты';
-        btn.style.cssText = `
-            position: fixed;
-            top: 12px;
-            left: 100px;
-            z-index: 10000;
-            background: rgba(0,0,0,0.75);
-            color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 6px;
-            padding: 8px 14px;
-            cursor: pointer;
-            font-size: 14px;
-            backdrop-filter: blur(4px);
-        `;
         btn.addEventListener('click', () => {
             this.showReuploadMapOverlay();
         });
-        document.body.appendChild(btn);
+        this.getFloatingBtnGroup().appendChild(btn);
     }
 
     showReuploadMapOverlay() {
