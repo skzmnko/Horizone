@@ -22,6 +22,27 @@ class WorldsService {
         }));
     }
 
+    // Роль текущего пользователя в конкретном мире — используется, чтобы
+    // корректно проставить AuthService.setCurrentWorldRole() при открытии карты
+    async getMyRoleInWorld(worldId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        const { data, error } = await supabase
+            .from('world_members')
+            .select('role')
+            .eq('world_id', worldId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (error) {
+            console.error('❌ Error loading role in world:', error);
+            throw error;
+        }
+
+        return data ? data.role : null;
+    }
+
     // Создать новый мир (вызывающий пользователь автоматически становится DM)
     async createWorld(name) {
         const { data, error } = await supabase.rpc('create_world', { _name: name });
@@ -35,10 +56,13 @@ class WorldsService {
         return data; // id нового мира
     }
 
-    // Присоединиться к существующему миру по коду приглашения
-    async joinWorldByInviteCode(code) {
+    // Присоединиться к существующему миру по коду приглашения.
+    // characterName — необязательное отображаемое имя (имя персонажа)
+    // именно в этом мире; можно поменять позже через setMyWorldDisplayName.
+    async joinWorldByInviteCode(code, characterName = null) {
         const { data, error } = await supabase.rpc('redeem_invite', {
-            _code: code.trim().toUpperCase()
+            _code: code.trim().toUpperCase(),
+            _display_name: characterName || null
         });
 
         if (error) {
@@ -48,6 +72,19 @@ class WorldsService {
 
         console.log(`✅ Joined world: ${data}`);
         return data; // id мира, к которому присоединились
+    }
+
+    // Сменить своё отображаемое имя (имя персонажа) в конкретном мире
+    async setMyWorldDisplayName(worldId, name) {
+        const { error } = await supabase.rpc('set_my_world_display_name', {
+            _world_id: worldId,
+            _display_name: name
+        });
+
+        if (error) {
+            console.error('❌ Error updating display name:', error);
+            throw error;
+        }
     }
 
     // Создать код приглашения для мира (доступно только DM — проверяется RLS-политикой)

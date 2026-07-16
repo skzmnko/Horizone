@@ -8,6 +8,7 @@ import UIService from './services/ui-service.js';
 import AuthService from './services/auth-service.js';
 import LocationVisibilityService from './services/location-visibility-service.js';
 import LoginPage from './utils/login-page.js';
+import ResetPasswordPage from './utils/reset-password-page.js';
 import WorldSelectionPage from './utils/world-selection-page.js';
 import MapUploadPage from './utils/map-upload-page.js';
 import MapImageService from './services/map-image-service.js';
@@ -47,6 +48,22 @@ class Application {
 
             this.uiService = new UIService();
 
+            // Ссылка из письма "Забыли пароль?" приводит сюда с особым
+            // событием — вместо обычного флоу показываем форму нового пароля
+            let recoveryHandled = false;
+            AuthService.onAuthStateChange((event) => {
+                if (event === 'PASSWORD_RECOVERY' && !recoveryHandled) {
+                    recoveryHandled = true;
+                    this.showResetPasswordPage();
+                }
+            });
+
+            // Небольшая пауза даёт Supabase время разобрать токен из URL
+            // и успеть эмиттировать PASSWORD_RECOVERY до того, как мы
+            // продолжим обычную проверку сессии
+            await new Promise(resolve => setTimeout(resolve, 150));
+            if (recoveryHandled) return;
+
             const isAuthenticated = await AuthService.checkAuthStatus();
 
             if (!isAuthenticated) {
@@ -59,6 +76,13 @@ class Application {
         } catch (error) {
             console.error('❌ Application initialization error:', error);
         }
+    }
+
+    showResetPasswordPage() {
+        const resetPage = new ResetPasswordPage();
+        resetPage.initialize(() => {
+            this.showWorldSelectionPage();
+        });
     }
 
     showLoginPage() {
@@ -78,6 +102,14 @@ class Application {
     }
 
     async resolveMapAndProceed(worldId, mapId) {
+        // КЛЮЧЕВОЙ МОМЕНТ: роль — не свойство аккаунта, а свойство
+        // конкретного мира. Устанавливаем её здесь, до первого же
+        // обращения к AuthService.isDM() ниже по цепочке (в том числе
+        // внутри initializeApp/setupInteractions и сервисов вроде
+        // DetailPanelService, LayerService, MarkerService).
+        const role = await WorldsService.getMyRoleInWorld(worldId);
+        AuthService.setCurrentWorldRole(role);
+
         if (!mapId) {
             if (AuthService.isDM()) {
                 const mapUploadPage = new MapUploadPage();
@@ -171,7 +203,7 @@ class Application {
         this.initialized = true;
         console.log('🎉 The application is completely initialized');
         console.log(`👤 Current user: ${AuthService.getCurrentUser().displayName}`);
-        console.log(`🎭 Role: ${AuthService.getCurrentUser().role}`);
+        console.log(`🎭 Role in this world: ${AuthService.getCurrentWorldRole()}`);
         console.log(`📍 Locations shown: ${this.filteredLocations.length} из ${this.locations.length}`);
         console.log(`📱 Mobile device: ${this.isMobile ? 'Yes' : 'No'}`);
     }
@@ -197,6 +229,8 @@ class Application {
 
         if (AuthService.isDM()) {
             this.addReuploadMapButton();
+        } else {
+            this.addChangeDisplayNameButton();
         }
 
         if (AuthService.isDM() && !this.isMobile) {
@@ -276,6 +310,30 @@ class Application {
                 mapUploadPage.hide();
             }
         );
+    }
+
+    addChangeDisplayNameButton() {
+        const btn = document.createElement('button');
+        btn.id = 'change-display-name-btn';
+        btn.className = 'floating-btn';
+        btn.textContent = '✎ Моё имя в этом мире';
+        btn.title = 'Задать своё отображаемое имя (например, имя персонажа)';
+        btn.addEventListener('click', async () => {
+            // Простой браузерный prompt — сознательно не стилизуем сейчас,
+            // как и другие подобные разовые формы, если понадобится
+            // покрасивее — легко заменить на модалку по образцу
+            // world-selection-page.js
+            const name = window.prompt('Отображаемое имя в этом мире (например, имя персонажа):');
+            if (name === null) return;
+
+            try {
+                await WorldsService.setMyWorldDisplayName(this.currentWorldId, name.trim());
+                console.log('✅ Display name updated for this world');
+            } catch (err) {
+                alert('Не удалось сохранить имя: ' + err.message);
+            }
+        });
+        this.getFloatingBtnGroup().appendChild(btn);
     }
 
     updateMobileDMButtonVisibility() {

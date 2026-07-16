@@ -174,6 +174,53 @@ class WorldSelectionPage {
         });
     }
 
+    // Отдельная модалка для входа по коду — код + необязательное имя персонажа
+    showJoinWorldModal() {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tp-modal-overlay';
+            overlay.innerHTML = `
+                <div class="tp-modal">
+                    <div class="tp-modal-title">Код приглашения</div>
+                    <input type="text" class="tp-modal-input" id="tp-join-code" placeholder="Например, AB3D9F2K">
+                    <input type="text" class="tp-modal-input" id="tp-join-name" placeholder="Имя персонажа (необязательно)">
+                    <div class="tp-modal-actions">
+                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">Войти</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const codeInput = overlay.querySelector('#tp-join-code');
+            const nameInput = overlay.querySelector('#tp-join-name');
+            setTimeout(() => codeInput.focus(), 0);
+
+            const close = (value) => {
+                overlay.remove();
+                resolve(value);
+            };
+
+            const submit = () => {
+                const code = codeInput.value.trim();
+                if (!code) return;
+                close({ code, characterName: nameInput.value.trim() || null });
+            };
+
+            overlay.querySelector('#tp-modal-cancel').addEventListener('click', () => close(null));
+            overlay.querySelector('#tp-modal-confirm').addEventListener('click', submit);
+            [codeInput, nameInput].forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') submit();
+                    if (e.key === 'Escape') close(null);
+                });
+            });
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close(null);
+            });
+        });
+    }
+
     bindEvents() {
         document.getElementById('tp-logout-btn').addEventListener('click', async () => {
             await AuthService.logout();
@@ -197,15 +244,11 @@ class WorldSelectionPage {
         });
 
         document.getElementById('tp-join-link').addEventListener('click', async () => {
-            const code = await this.showPromptModal({
-                title: 'Код приглашения',
-                placeholder: 'Например, AB3D9F2K',
-                confirmLabel: 'Войти'
-            });
-            if (!code) return;
+            const result = await this.showJoinWorldModal();
+            if (!result) return;
 
             try {
-                await WorldsService.joinWorldByInviteCode(code);
+                await WorldsService.joinWorldByInviteCode(result.code, result.characterName);
                 await this.loadAndRender();
             } catch (err) {
                 this.showError('Неверный или истёкший код приглашения');

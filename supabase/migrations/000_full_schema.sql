@@ -69,7 +69,21 @@ create table if not exists world_invites (
     expires_at timestamptz
 );
 
--- На случай если таблица worlds была создана раньше без этой колонки
+-- Публичный профиль пользователя. Отдельно от auth.users, потому что:
+-- 1) auth.users недоступна напрямую для запросов с клиента;
+-- 2) display_name должен быть уникальным — а user_metadata для этого
+--    не подходит (её как раз может свободно менять сам пользователь).
+create table if not exists profiles (
+    id uuid primary key references auth.users(id) on delete cascade,
+    display_name text not null unique,
+    created_at timestamptz default now()
+);
+
+-- Отдельное отображаемое имя (имя персонажа) конкретно в этом мире —
+-- если не задано, используется profiles.display_name.
+alter table world_members add column if not exists display_name text;
+
+-- На случай если worlds/world_members были созданы раньше без этих колонок
 alter table worlds add column if not exists cover_image_path text;
 
 
@@ -120,7 +134,7 @@ begin
 end;
 $$;
 
-create or replace function redeem_invite(_code text)
+create or replace function redeem_invite(_code text, _display_name text default null)
 returns uuid
 language plpgsql
 security definer
@@ -137,12 +151,71 @@ begin
     raise exception 'Invite code not found or expired';
   end if;
 
-  insert into world_members (world_id, user_id, role)
-  values (_world_id, auth.uid(), 'player')
+  insert into world_members (world_id, user_id, role, display_name)
+  values (_world_id, auth.uid(), 'player', nullif(_display_name, ''))
   on conflict (world_id, user_id) do nothing;
 
   return _world_id;
 end;
+$$;
+
+-- Игрок может в любой момент сменить своё отображаемое имя (имя
+-- персонажа) конкретно в этом мире. Отдельная RPC вместо общей UPDATE
+-- политики — чтобы игрок физически не мог этим же путём поменять
+-- себе роль или world_id, только свою подпись.
+create or replace function set_my_world_display_name(_world_id uuid, _display_name text)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  update world_members
+  set display_name = nullif(_display_name, '')
+  where world_id = _world_id and user_id = auth.uid();
+end;
+$$;
+
+-- Автоматическое создание профиля сразу при регистрации пользователя.
+-- Имя берём из user_metadata (передаётся при signUp), либо из email.
+create or replace function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.profiles (id, display_name)
+  values (
+    new.id,
+    coalesce(nullif(new.raw_user_meta_data->>'display_name', ''), split_part(new.email, '@', 1))
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
+-- Бэкафилл: у пользователей, созданных ДО появления триггера (например,
+-- тестовых аккаунтов из Dashboard), профиля ещё нет — досоздаём.
+-- Если у кого-то из них случайно совпадут имена по умолчанию — этот
+-- insert упадёт на unique-констрейнте; в норме для пары тестовых
+-- аккаунтов такого не бывает.
+insert into public.profiles (id, display_name)
+select id, coalesce(nullif(raw_user_meta_data->>'display_name', ''), split_part(email, '@', 1))
+from auth.users
+on conflict (id) do nothing;
+
+-- Проверка занятости display_name (используется на форме регистрации
+-- ещё до отправки — это подсказка для UX, а не единственная защита:
+-- финальную уникальность всё равно обеспечивает "unique" на колонке)
+create or replace function is_display_name_available(_name text)
+returns boolean
+language sql
+stable
+as $$
+  select not exists (select 1 from profiles where display_name = _name);
 $$;
 
 
@@ -155,6 +228,7 @@ alter table world_members enable row level security;
 alter table maps enable row level security;
 alter table locations enable row level security;
 alter table world_invites enable row level security;
+alter table profiles enable row level security;
 
 
 -- =====================================================================
@@ -244,6 +318,20 @@ drop policy if exists "Authenticated users can look up invite by code" on world_
 create policy "Authenticated users can look up invite by code"
 on world_invites for select
 using (auth.role() = 'authenticated');
+
+
+-- Профили: имя видно всем авторизованным (нужно, чтобы показывать
+-- участников мира по именам), редактировать может только сам пользователь.
+drop policy if exists "Anyone authenticated can view profiles" on profiles;
+create policy "Anyone authenticated can view profiles"
+on profiles for select
+using (auth.role() = 'authenticated');
+
+drop policy if exists "Users can update their own profile" on profiles;
+create policy "Users can update their own profile"
+on profiles for update
+using (id = auth.uid())
+with check (id = auth.uid());
 
 
 -- =====================================================================
