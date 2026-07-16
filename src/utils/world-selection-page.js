@@ -257,6 +257,54 @@ class WorldSelectionPage {
                 cursor: pointer;
                 font-size: 13px;
             }
+
+            .tp-modal-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 20000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .tp-modal {
+                background: #1e2743;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 10px;
+                padding: 24px;
+                max-width: 360px;
+                width: 100%;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            }
+            .tp-modal-title {
+                font-size: 18px;
+                font-weight: 700;
+                color: #ffffff;
+                margin-bottom: 14px;
+            }
+            .tp-modal-message {
+                font-size: 14px;
+                color: #c7cbd6;
+                margin-bottom: 18px;
+                line-height: 1.4;
+            }
+            .tp-modal-input {
+                width: 100%;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.15);
+                border-radius: 6px;
+                padding: 9px 12px;
+                color: #fff;
+                font-size: 14px;
+                margin-bottom: 18px;
+                box-sizing: border-box;
+            }
+            .tp-modal-actions {
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -353,6 +401,73 @@ class WorldSelectionPage {
         return `linear-gradient(135deg, hsl(${hue}, 40%, 26%), hsl(${(hue + 40) % 360}, 35%, 14%))`;
     }
 
+    // Стилизованная замена window.prompt() — возвращает Promise<string|null>
+    showPromptModal({ title, placeholder = '', confirmLabel = 'ОК' }) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tp-modal-overlay';
+            overlay.innerHTML = `
+                <div class="tp-modal">
+                    <div class="tp-modal-title">${this.escapeHtml(title)}</div>
+                    <input type="text" class="tp-modal-input" id="tp-modal-input" placeholder="${this.escapeHtml(placeholder)}">
+                    <div class="tp-modal-actions">
+                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const input = overlay.querySelector('#tp-modal-input');
+            setTimeout(() => input.focus(), 0);
+
+            const close = (value) => {
+                overlay.remove();
+                resolve(value);
+            };
+
+            overlay.querySelector('#tp-modal-cancel').addEventListener('click', () => close(null));
+            overlay.querySelector('#tp-modal-confirm').addEventListener('click', () => close(input.value.trim() || null));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') close(input.value.trim() || null);
+                if (e.key === 'Escape') close(null);
+            });
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close(null);
+            });
+        });
+    }
+
+    // Стилизованная замена window.confirm() — возвращает Promise<boolean>
+    showConfirmModal({ title, message, confirmLabel = 'Удалить', danger = true }) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tp-modal-overlay';
+            overlay.innerHTML = `
+                <div class="tp-modal">
+                    <div class="tp-modal-title">${this.escapeHtml(title)}</div>
+                    <div class="tp-modal-message">${message}</div>
+                    <div class="tp-modal-actions">
+                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn ${danger ? 'tp-btn-danger' : 'tp-btn-primary'}" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const close = (value) => {
+                overlay.remove();
+                resolve(value);
+            };
+
+            overlay.querySelector('#tp-modal-cancel').addEventListener('click', () => close(false));
+            overlay.querySelector('#tp-modal-confirm').addEventListener('click', () => close(true));
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close(false);
+            });
+        });
+    }
+
     bindEvents() {
         document.getElementById('tp-logout-btn').addEventListener('click', async () => {
             await AuthService.logout();
@@ -360,11 +475,15 @@ class WorldSelectionPage {
         });
 
         document.getElementById('tp-create-world-btn').addEventListener('click', async () => {
-            const name = window.prompt('Название нового мира:');
-            if (!name || !name.trim()) return;
+            const name = await this.showPromptModal({
+                title: 'Название нового мира',
+                placeholder: 'Например, Ораска',
+                confirmLabel: 'Создать'
+            });
+            if (!name) return;
 
             try {
-                await WorldsService.createWorld(name.trim());
+                await WorldsService.createWorld(name);
                 await this.loadAndRender();
             } catch (err) {
                 this.showError('Не удалось создать мир: ' + err.message);
@@ -372,11 +491,15 @@ class WorldSelectionPage {
         });
 
         document.getElementById('tp-join-link').addEventListener('click', async () => {
-            const code = window.prompt('Код приглашения:');
-            if (!code || !code.trim()) return;
+            const code = await this.showPromptModal({
+                title: 'Код приглашения',
+                placeholder: 'Например, AB3D9F2K',
+                confirmLabel: 'Войти'
+            });
+            if (!code) return;
 
             try {
-                await WorldsService.joinWorldByInviteCode(code.trim());
+                await WorldsService.joinWorldByInviteCode(code);
                 await this.loadAndRender();
             } catch (err) {
                 this.showError('Неверный или истёкший код приглашения');
@@ -388,12 +511,14 @@ class WorldSelectionPage {
 
             const names = this.worlds
                 .filter(w => this.selectedWorldIds.has(w.id))
-                .map(w => w.name)
+                .map(w => this.escapeHtml(w.name))
                 .join(', ');
 
-            const confirmed = window.confirm(
-                `Удалить выбранные миры (${names}) со всеми картами и локациями? Это необратимо.`
-            );
+            const confirmed = await this.showConfirmModal({
+                title: 'Удалить миры?',
+                message: `Удалить выбранные миры (<strong>${names}</strong>) со всеми картами и локациями? Это необратимо.`,
+                confirmLabel: 'Удалить'
+            });
             if (!confirmed) return;
 
             try {
