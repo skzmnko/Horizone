@@ -13,6 +13,26 @@ body {
     overflow: hidden;
 }
 
+/* Пока приложение не готово показать реальную карту (идёт логин/выбор
+   мира) — вся "начинка" карты физически не отрисовывается. Без этого
+   браузер на долю секунды показывает пустую карту с панелью фильтров
+   ДО того, как JS успевает отрисовать экран логина (FOUC), а также эта
+   же начинка слабо просвечивает сквозь полупрозрачный фон формы логина.
+   main.js убирает класс app-loading с body непосредственно перед
+   MapService.initialize() — то есть только когда карта действительно
+   готова к показу. */
+body.app-loading #map,
+body.app-loading .map-background,
+body.app-loading .control-panel-container,
+body.app-loading .panel-open-btn,
+body.app-loading .mobile-top-panel,
+body.app-loading .mobile-search-panel,
+body.app-loading .profile-panel,
+body.app-loading .desktop-profile-btn,
+body.app-loading #dm-tools-panel-container {
+    display: none !important;
+}
+
 #map {
     position: absolute;
     top: 0;

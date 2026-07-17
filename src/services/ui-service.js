@@ -139,13 +139,20 @@ class UIService {
             this.profileUsername.textContent = user.displayName || user.username;
         }
         if (this.profileRole && user) {
-            this.profileRole.textContent = user.role === 'DM' ? 'Мастер' : 'Игрок';
+            this.profileRole.textContent = AuthService.isDM() ? 'Мастер' : 'Игрок';
         }
 
         if (this.profileLogoutBtn) {
-            this.profileLogoutBtn.addEventListener('click', () => {
-                AuthService.logout();
-                location.reload();
+            this.profileLogoutBtn.addEventListener('click', async () => {
+                this.profileLogoutBtn.disabled = true;
+                this.profileLogoutBtn.textContent = 'Выход...';
+                try {
+                    await AuthService.logout();
+                } catch (e) {
+                    console.warn('⚠️ Logout error (proceeding anyway):', e);
+                } finally {
+                    location.reload();
+                }
             });
         }
 

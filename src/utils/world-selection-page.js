@@ -61,6 +61,10 @@ class WorldSelectionPage {
 
             ${gridHtml}
 
+            <div style="text-align:center; margin-top:32px;">
+                <button class="tp-danger-link" id="tp-delete-account-btn">Удалить мой аккаунт безвозвратно</button>
+            </div>
+
             <div id="tp-error" class="error-message hidden tp-error-box"></div>
         `;
 
@@ -222,9 +226,37 @@ class WorldSelectionPage {
     }
 
     bindEvents() {
-        document.getElementById('tp-logout-btn').addEventListener('click', async () => {
-            await AuthService.logout();
-            window.location.reload();
+        document.getElementById('tp-logout-btn').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            btn.textContent = 'Выход...';
+            try {
+                await AuthService.logout();
+            } catch (err) {
+                console.warn('⚠️ Logout error (proceeding anyway):', err);
+            } finally {
+                window.location.reload();
+            }
+        });
+
+        document.getElementById('tp-delete-account-btn').addEventListener('click', async () => {
+            const confirmed = await this.showConfirmModal({
+                title: 'Удалить аккаунт?',
+                message: 'Это удалит твой аккаунт, все твои миры (со всеми картами и локациями) и выход из всех чужих миров. Это <strong>необратимо</strong>.',
+                confirmLabel: 'Удалить навсегда'
+            });
+            if (!confirmed) return;
+
+            try {
+                const result = await AuthService.deleteMyAccount();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    this.showError(result.error);
+                }
+            } catch (err) {
+                this.showError('Не удалось удалить аккаунт: ' + err.message);
+            }
         });
 
         document.getElementById('tp-create-world-btn').addEventListener('click', async () => {

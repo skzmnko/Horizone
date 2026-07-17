@@ -218,6 +218,29 @@ as $$
   select not exists (select 1 from profiles where display_name = _name);
 $$;
 
+-- worlds.owner_id изначально был создан БЕЗ on delete cascade — из-за
+-- этого удаление пользователя, владеющего хотя бы одним миром, падало
+-- с ошибкой внешнего ключа. Пересоздаём constraint с cascade, чтобы
+-- миры удалялись вместе с их владельцем (остальное уже каскадно:
+-- world_members/maps/locations зависят от worlds, profiles — от auth.users).
+alter table worlds drop constraint if exists worlds_owner_id_fkey;
+alter table worlds add constraint worlds_owner_id_fkey
+    foreign key (owner_id) references auth.users(id) on delete cascade;
+
+-- Самостоятельное удаление своего аккаунта. security definer нужен,
+-- потому что удаление из auth.users обычными правами клиента невозможно —
+-- но сама функция позволяет удалить строго и только текущего пользователя
+-- (auth.uid()), больше ничего.
+create or replace function delete_my_account()
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
 
 -- =====================================================================
 -- 5. ВКЛЮЧИТЬ ROW LEVEL SECURITY (идемпотентно само по себе)

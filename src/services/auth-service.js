@@ -72,6 +72,23 @@ class AuthService {
         return { success: true, user: this.currentUser };
     }
 
+    // Полностью и безвозвратно удалить свой аккаунт (все свои миры,
+    // участие в чужих мирах, профиль — всё каскадно удалится в БД)
+    async deleteMyAccount() {
+        const { error } = await supabase.rpc('delete_my_account');
+
+        if (error) {
+            console.warn('❌ Delete account error:', error.message);
+            return { success: false, error: this.translateError(error) };
+        }
+
+        this.currentUser = null;
+        this.isAuthenticated = false;
+        this.currentWorldRole = null;
+
+        return { success: true };
+    }
+
     // Выход
     async logout() {
         await supabase.auth.signOut();

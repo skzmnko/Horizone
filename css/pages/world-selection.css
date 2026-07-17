@@ -275,6 +275,19 @@
     font-size: 13px;
 }
 
+.tp-danger-link {
+    background: none;
+    border: none;
+    color: #6b5858;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.tp-danger-link:hover {
+    color: #c24558;
+}
+
 .tp-error-box {
     max-width: 1100px;
     margin: 16px auto 0;

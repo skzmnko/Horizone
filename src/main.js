@@ -179,6 +179,10 @@ class Application {
     async initializeApp() {
         await waitForLeaflet();
 
+        // Только теперь показываем реальную "начинку" карты — до этого
+        // момента она была скрыта через body.app-loading (см. base.css)
+        document.body.classList.remove('app-loading');
+
         MapService.initialize('map', {
             width: this.mapWidth,
             height: this.mapHeight,
