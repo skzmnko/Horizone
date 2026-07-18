@@ -96,7 +96,7 @@ class WorldSelectionPage {
                 </div>
                 <div class="tp-card-name">
                     ${this.escapeHtml(world.name)}
-                    <span class="tp-card-role">${isDM ? '🎲 Мастер' : '🗺️ Игрок'}</span>
+                    <span class="tp-card-role">${isDM ? '🎲 Мастер' : '🔎 Наблюдатель'}</span>
                 </div>
             </div>
         `;

@@ -87,16 +87,19 @@ class WorldsService {
         }
     }
 
-    // Создать код приглашения для мира (доступно только DM — проверяется RLS-политикой)
-    async createInvite(worldId, expiresInHours = null) {
+    // Создать код приглашения для мира (доступно только DM — проверяется RLS-политикой).
+    // maxUses: null — без ограничения по числу использований, 1 — одноразовая ссылка (для одного игрока).
+    async createInvite(worldId, { expiresInHours = null, maxUses = null } = {}) {
         const code = this.generateCode();
         const expires_at = expiresInHours
             ? new Date(Date.now() + expiresInHours * 3600 * 1000).toISOString()
             : null;
 
+        const { data: { user } } = await supabase.auth.getUser();
+
         const { data, error } = await supabase
             .from('world_invites')
-            .insert({ world_id: worldId, code, expires_at })
+            .insert({ world_id: worldId, code, expires_at, max_uses: maxUses, created_by: user?.id || null })
             .select()
             .single();
 
@@ -106,6 +109,31 @@ class WorldsService {
         }
 
         return data;
+    }
+
+    // Список активных приглашений мира — для панели DM
+    async getWorldInvites(worldId) {
+        const { data, error } = await supabase.rpc('get_world_invites', { _world_id: worldId });
+
+        if (error) {
+            console.error('❌ Error loading invites:', error);
+            throw error;
+        }
+
+        return data;
+    }
+
+    // Отозвать (удалить) код приглашения — доступно только DM (RLS)
+    async revokeInvite(inviteId) {
+        const { error } = await supabase
+            .from('world_invites')
+            .delete()
+            .eq('id', inviteId);
+
+        if (error) {
+            console.error('❌ Error revoking invite:', error);
+            throw error;
+        }
     }
 
     generateCode(length = 8) {
@@ -141,6 +169,22 @@ class WorldsService {
 
         if (error) {
             console.error('❌ Error loading map:', error);
+            throw error;
+        }
+
+        return data;
+    }
+
+    // Детали одного мира (имя, обложка) — нужно для world-control-page
+    async getWorld(worldId) {
+        const { data, error } = await supabase
+            .from('worlds')
+            .select('*')
+            .eq('id', worldId)
+            .single();
+
+        if (error) {
+            console.error('❌ Error loading world:', error);
             throw error;
         }
 

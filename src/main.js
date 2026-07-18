@@ -10,11 +10,40 @@ import LocationVisibilityService from './services/location-visibility-service.js
 import LoginPage from './utils/login-page.js';
 import ResetPasswordPage from './utils/reset-password-page.js';
 import WorldSelectionPage from './utils/world-selection-page.js';
-import MapUploadPage from './utils/map-upload-page.js';
+import WorldControlPage from './utils/world-control-page.js';
 import MapImageService from './services/map-image-service.js';
 import WorldsService from './services/worlds-service.js';
 import DetailPanelService from './services/detail-panel-service.js';
 import DMToolsPanel from './dm/dm-tools-panel.js';
+
+// ?world=WORLD_ID в адресной строке — используется ТОЛЬКО для DM
+// (см. enterWorld()). Игроки/наблюдатели идут прямиком в карту, как и
+// раньше, и этот параметр для них никогда не проставляется.
+//
+// Зачем он вообще нужен: выход из интерактивной карты по-прежнему делает
+// полный window.location.reload() (безопасно пересоздавать Leaflet и
+// сервисы карты иначе рискованно) — а после reload вся JS-память
+// приложения теряется. Параметр в URL — единственный способ после такой
+// перезагрузки понять "вернуть DM надо не в общий список миров, а на
+// страницу управления вот этим конкретным миром".
+function setWorldUrlParam(worldId) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('world', worldId);
+    const newUrl = window.location.pathname + `?${params.toString()}` + window.location.hash;
+    window.history.replaceState({}, '', newUrl);
+}
+
+function clearWorldUrlParam() {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('world');
+    const query = params.toString();
+    const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
+    window.history.replaceState({}, '', newUrl);
+}
+
+function getWorldUrlParam() {
+    return new URLSearchParams(window.location.search).get('world');
+}
 
 async function waitForLeaflet() {
     const maxWaitTime = 10000;
@@ -71,6 +100,16 @@ class Application {
                 return;
             }
 
+            // Бывает после reload из интерактивной карты (см. addBackToWorldsButton)
+            // или просто если DM освежил страницу/открыл её по сохранённой ссылке —
+            // ?world= проставляется только для DM, поэтому такое восстановление
+            // никогда не срабатывает для игроков/наблюдателей.
+            const restoredWorldId = getWorldUrlParam();
+            if (restoredWorldId) {
+                await this.enterWorld(restoredWorldId);
+                return;
+            }
+
             this.showWorldSelectionPage();
 
         } catch (error) {
@@ -87,21 +126,31 @@ class Application {
 
     showLoginPage() {
         this.loginPage = new LoginPage();
+
         this.loginPage.initialize(() => {
+            const restoredWorldId = getWorldUrlParam();
+            if (restoredWorldId) {
+                this.enterWorld(restoredWorldId);
+                return;
+            }
+
             this.showWorldSelectionPage();
         });
     }
 
     showWorldSelectionPage() {
+        clearWorldUrlParam();
         this.worldSelectionPage = new WorldSelectionPage();
-        this.worldSelectionPage.initialize(({ worldId, mapId }) => {
-            this.currentWorldId = worldId;
-            this.currentMapId = mapId;
-            this.resolveMapAndProceed(worldId, mapId);
+        this.worldSelectionPage.initialize(({ worldId }) => {
+            this.enterWorld(worldId);
         });
     }
 
-    async resolveMapAndProceed(worldId, mapId) {
+    // Единая точка входа в мир — определяет роль и решает, куда вести
+    // человека дальше: DM всегда попадает на страницу управления миром
+    // (world-control-page), игрок/наблюдатель — как и раньше, сразу
+    // в интерактивную карту (или на заглушку "карта ещё не готова").
+    async enterWorld(worldId) {
         // КЛЮЧЕВОЙ МОМЕНТ: роль — не свойство аккаунта, а свойство
         // конкретного мира. Устанавливаем её здесь, до первого же
         // обращения к AuthService.isDM() ниже по цепочке (в том числе
@@ -110,21 +159,43 @@ class Application {
         const role = await WorldsService.getMyRoleInWorld(worldId);
         AuthService.setCurrentWorldRole(role);
 
+        this.currentWorldId = worldId;
+
+        const maps = await WorldsService.getMapsForWorld(worldId);
+        const map = maps[0] || null;
+        this.currentMapId = map ? map.id : null;
+
+        if (AuthService.isDM()) {
+            this.showWorldControlPage(worldId, this.currentMapId);
+        } else {
+            this.openMapView(worldId, this.currentMapId);
+        }
+    }
+
+    showWorldControlPage(worldId, mapId) {
+        setWorldUrlParam(worldId);
+
+        this.worldControlPage = new WorldControlPage();
+        this.worldControlPage.initialize(worldId, mapId, {
+            onEnterMap: ({ mapId }) => {
+                this.currentMapId = mapId;
+                this.openMapView(worldId, mapId);
+            },
+            onBackToWorlds: () => {
+                this.showWorldSelectionPage();
+            }
+        });
+    }
+
+    // Показывает саму интерактивную карту (Leaflet). Для DM сюда попадают
+    // только через "🗺️ Войти в мир" на странице управления — сама загрузка
+    // карты туда уже не заведёт (это делает клик по блоку карты на той
+    // странице). Ветка "нет карты" здесь — просто подстраховка на случай,
+    // если DM как-то оказался тут раньше, чем загрузил карту.
+    async openMapView(worldId, mapId) {
         if (!mapId) {
             if (AuthService.isDM()) {
-                const mapUploadPage = new MapUploadPage();
-                mapUploadPage.initialize(
-                    worldId,
-                    null,
-                    (map) => {
-                        this.currentMapId = map.id;
-                        this.mapImageUrl = MapImageService.getPublicUrl(map.image_path);
-                        this.mapWidth = map.width;
-                        this.mapHeight = map.height;
-                        this.initializeApp();
-                    },
-                    () => { this.showWorldSelectionPage(); }
-                );
+                this.showWorldControlPage(worldId, null);
             } else {
                 this.showWaitingForMapMessage();
             }
@@ -135,13 +206,7 @@ class Application {
 
         if (!map.image_path) {
             if (AuthService.isDM()) {
-                const mapUploadPage = new MapUploadPage();
-                mapUploadPage.initialize(
-                    worldId,
-                    mapId,
-                    () => { this.initializeApp(); },
-                    () => { this.showWorldSelectionPage(); }
-                );
+                this.showWorldControlPage(worldId, mapId);
             } else {
                 this.showWaitingForMapMessage();
             }
@@ -231,9 +296,7 @@ class Application {
         this.updateMobileDMButtonVisibility();
         this.addBackToWorldsButton();
 
-        if (AuthService.isDM()) {
-            this.addReuploadMapButton();
-        } else {
+        if (!AuthService.isDM()) {
             this.addChangeDisplayNameButton();
         }
 
@@ -271,49 +334,24 @@ class Application {
     }
 
     addBackToWorldsButton() {
+        const isDM = AuthService.isDM();
+
         const btn = document.createElement('button');
         btn.id = 'back-to-worlds-btn';
         btn.className = 'floating-btn';
-        btn.textContent = '← Миры';
-        btn.title = 'Вернуться к списку миров';
+        btn.textContent = isDM ? '← К управлению миром' : '← Миры';
+        btn.title = isDM ? 'Вернуться на страницу управления миром' : 'Вернуться к списку миров';
         btn.addEventListener('click', () => {
             // Полная перезагрузка — самый надёжный способ корректно
             // разобрать карту и все связанные с ней UI-сервисы
             // (DM-панель, поиск, детали локации), не переписывая
             // их под явное уничтожение. Сессия сохранена в Supabase,
-            // поэтому после перезагрузки открывается сразу список миров,
-            // а не форма логина.
+            // а для DM в адресной строке остался ?world=<id> — поэтому
+            // после перезагрузки он попадёт обратно на страницу
+            // управления именно этим миром, а не в общий список.
             window.location.reload();
         });
         this.getFloatingBtnGroup().appendChild(btn);
-    }
-
-    addReuploadMapButton() {
-        const btn = document.createElement('button');
-        btn.id = 'reupload-map-btn';
-        btn.className = 'floating-btn';
-        btn.textContent = '🔄 Обновить карту мира';
-        btn.title = 'Загрузить новое изображение карты';
-        btn.addEventListener('click', () => {
-            this.showReuploadMapOverlay();
-        });
-        this.getFloatingBtnGroup().appendChild(btn);
-    }
-
-    showReuploadMapOverlay() {
-        const mapUploadPage = new MapUploadPage();
-        mapUploadPage.initialize(
-            this.currentWorldId,
-            this.currentMapId,
-            () => {
-                // Проще всего перезагрузить страницу — она сама подхватит
-                // новую картинку карты через уже отработанный поток входа
-                window.location.reload();
-            },
-            () => {
-                mapUploadPage.hide();
-            }
-        );
     }
 
     addChangeDisplayNameButton() {
