@@ -15,17 +15,8 @@ import MapImageService from './services/map-image-service.js';
 import WorldsService from './services/worlds-service.js';
 import DetailPanelService from './services/detail-panel-service.js';
 import DMToolsPanel from './dm/dm-tools-panel.js';
+import { setLanguage } from './services/i18n.js';
 
-// ?world=WORLD_ID в адресной строке — используется ТОЛЬКО для DM
-// (см. enterWorld()). Игроки/наблюдатели идут прямиком в карту, как и
-// раньше, и этот параметр для них никогда не проставляется.
-//
-// Зачем он вообще нужен: выход из интерактивной карты по-прежнему делает
-// полный window.location.reload() (безопасно пересоздавать Leaflet и
-// сервисы карты иначе рискованно) — а после reload вся JS-память
-// приложения теряется. Параметр в URL — единственный способ после такой
-// перезагрузки понять "вернуть DM надо не в общий список миров, а на
-// страницу управления вот этим конкретным миром".
 function setWorldUrlParam(worldId) {
     const params = new URLSearchParams(window.location.search);
     params.set('world', worldId);
@@ -71,14 +62,14 @@ class Application {
         this.isMobile = window.innerWidth <= 768;
     }
 
+
     async initialize() {
         try {
             console.log('🚀 Application initialization...');
 
+            setLanguage('en');
             this.uiService = new UIService();
 
-            // Ссылка из письма "Забыли пароль?" приводит сюда с особым
-            // событием — вместо обычного флоу показываем форму нового пароля
             let recoveryHandled = false;
             AuthService.onAuthStateChange((event) => {
                 if (event === 'PASSWORD_RECOVERY' && !recoveryHandled) {
@@ -87,9 +78,6 @@ class Application {
                 }
             });
 
-            // Небольшая пауза даёт Supabase время разобрать токен из URL
-            // и успеть эмиттировать PASSWORD_RECOVERY до того, как мы
-            // продолжим обычную проверку сессии
             await new Promise(resolve => setTimeout(resolve, 150));
             if (recoveryHandled) return;
 
@@ -100,10 +88,6 @@ class Application {
                 return;
             }
 
-            // Бывает после reload из интерактивной карты (см. addBackToWorldsButton)
-            // или просто если DM освежил страницу/открыл её по сохранённой ссылке —
-            // ?world= проставляется только для DM, поэтому такое восстановление
-            // никогда не срабатывает для игроков/наблюдателей.
             const restoredWorldId = getWorldUrlParam();
             if (restoredWorldId) {
                 await this.enterWorld(restoredWorldId);
@@ -146,16 +130,7 @@ class Application {
         });
     }
 
-    // Единая точка входа в мир — определяет роль и решает, куда вести
-    // человека дальше: DM всегда попадает на страницу управления миром
-    // (world-control-page), игрок/наблюдатель — как и раньше, сразу
-    // в интерактивную карту (или на заглушку "карта ещё не готова").
     async enterWorld(worldId) {
-        // КЛЮЧЕВОЙ МОМЕНТ: роль — не свойство аккаунта, а свойство
-        // конкретного мира. Устанавливаем её здесь, до первого же
-        // обращения к AuthService.isDM() ниже по цепочке (в том числе
-        // внутри initializeApp/setupInteractions и сервисов вроде
-        // DetailPanelService, LayerService, MarkerService).
         const role = await WorldsService.getMyRoleInWorld(worldId);
         AuthService.setCurrentWorldRole(role);
 
@@ -187,11 +162,6 @@ class Application {
         });
     }
 
-    // Показывает саму интерактивную карту (Leaflet). Для DM сюда попадают
-    // только через "🗺️ Войти в мир" на странице управления — сама загрузка
-    // карты туда уже не заведёт (это делает клик по блоку карты на той
-    // странице). Ветка "нет карты" здесь — просто подстраховка на случай,
-    // если DM как-то оказался тут раньше, чем загрузил карту.
     async openMapView(worldId, mapId) {
         if (!mapId) {
             if (AuthService.isDM()) {
@@ -244,8 +214,6 @@ class Application {
     async initializeApp() {
         await waitForLeaflet();
 
-        // Только теперь показываем реальную "начинку" карты — до этого
-        // момента она была скрыта через body.app-loading (см. base.css)
         document.body.classList.remove('app-loading');
 
         MapService.initialize('map', {
@@ -342,13 +310,6 @@ class Application {
         btn.textContent = isDM ? '← К управлению миром' : '← Миры';
         btn.title = isDM ? 'Вернуться на страницу управления миром' : 'Вернуться к списку миров';
         btn.addEventListener('click', () => {
-            // Полная перезагрузка — самый надёжный способ корректно
-            // разобрать карту и все связанные с ней UI-сервисы
-            // (DM-панель, поиск, детали локации), не переписывая
-            // их под явное уничтожение. Сессия сохранена в Supabase,
-            // а для DM в адресной строке остался ?world=<id> — поэтому
-            // после перезагрузки он попадёт обратно на страницу
-            // управления именно этим миром, а не в общий список.
             window.location.reload();
         });
         this.getFloatingBtnGroup().appendChild(btn);
@@ -361,10 +322,6 @@ class Application {
         btn.textContent = '✎ Моё имя в этом мире';
         btn.title = 'Задать своё отображаемое имя (например, имя персонажа)';
         btn.addEventListener('click', async () => {
-            // Простой браузерный prompt — сознательно не стилизуем сейчас,
-            // как и другие подобные разовые формы, если понадобится
-            // покрасивее — легко заменить на модалку по образцу
-            // world-selection-page.js
             const name = window.prompt('Отображаемое имя в этом мире (например, имя персонажа):');
             if (name === null) return;
 
