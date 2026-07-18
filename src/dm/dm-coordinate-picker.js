@@ -48,38 +48,13 @@ class DMCoordinatePicker {
     createCoordsDisplay() {
         this.displayContainer = document.createElement('div');
         this.displayContainer.id = 'dm-coords-display';
-        this.displayContainer.style.cssText = `
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(26, 127, 127, 0.5);
-            border-radius: 8px;
-            padding: 12px 20px;
-            color: #ffffff;
-            font-family: monospace;
-            font-size: 14px;
-            z-index: 9999;
-            min-width: 250px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
-            pointer-events: none;
-        `;
+        // Заменяем инлайн-стили на класс
+        this.displayContainer.className = 'dm-coords-display';
         this.displayContainer.innerHTML = `
-            <div style="color: #7fbfbf; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">
-                🎯 Click coordinates
-            </div>
-            <div style="font-size: 16px; color: #ffffff;">
-                X: <span id="dm-coord-x">--</span>%, Y: <span id="dm-coord-y">--</span>%
-            </div>
-            <div style="font-size: 12px; color: #a3a3a3; margin-top: 4px;">
-                (pixels: <span id="dm-coord-px">--</span>, <span id="dm-coord-py">--</span>)
-            </div>
-            <div style="font-size: 11px; color: #6b7280; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
-                Click on the map to select a point
-            </div>
+            <div class="dm-coords-title">🎯 Click coordinates</div>
+            <div class="dm-coords-values">X: <span id="dm-coord-x">--</span>%, Y: <span id="dm-coord-y">--</span>%</div>
+            <div class="dm-coords-pixels">(pixels: <span id="dm-coord-px">--</span>, <span id="dm-coord-py">--</span>)</div>
+            <div class="dm-coords-hint">Click on the map to select a point</div>
         `;
         document.body.appendChild(this.displayContainer);
     }
@@ -160,15 +135,8 @@ class DMCoordinatePicker {
 
         this.tempMarker = L.marker(latlng, {
             icon: L.divIcon({
-                className: 'dm-temp-marker-icon',
-                html: `<div style="
-                    width: 14px;
-                    height: 14px;
-                    background: #1a7f7f;
-                    border: 2px solid #ffffff;
-                    border-radius: 50%;
-                    box-shadow: 0 0 15px rgba(26, 127, 127, 0.5);
-                "></div>`,
+                className: 'dm-temp-marker-icon', // используем CSS-класс
+                html: `<div></div>`, // пустой div, стили задаются через CSS
                 iconSize: [14, 14],
                 iconAnchor: [7, 7]
             })

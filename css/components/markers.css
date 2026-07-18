@@ -5,8 +5,10 @@
     border: none !important;
 }
 
+/* ===== NEW: styles for marker images (extracted from JS) ===== */
 .custom-icon img {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
     transition: all 0.3s ease;
     border-radius: 2px;
 }
@@ -31,6 +33,21 @@
     text-shadow: none !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     margin-bottom: 20px !important;
+    backdrop-filter: blur(2px) !important;
+}
+
+/* ===== NEW: custom scale control (used by MapService) ===== */
+.leaflet-control-scale-custom {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(0, 0, 0, 0.3) !important;
+    border-radius: var(--mg-radius-md) !important;
+    padding: 4px 8px !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    font-size: 12px !important;
+    text-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    margin-bottom: 10px !important;
     backdrop-filter: blur(2px) !important;
 }
 

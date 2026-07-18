@@ -202,10 +202,8 @@ class SearchService {
 
     showNoResults(resultsContainer) {
         const noResults = document.createElement('div');
-        noResults.className = 'search-result-item';
+        noResults.className = 'search-no-results'; // используем CSS-класс
         noResults.textContent = 'Ничего не найдено';
-        noResults.style.color = '#a3a3a3';
-        noResults.style.cursor = 'default';
         resultsContainer.appendChild(noResults);
         resultsContainer.classList.add('has-results');
     }

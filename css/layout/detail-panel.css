@@ -273,6 +273,11 @@
     border: 1px solid var(--mg-border);
 }
 
+/* ===== NEW: hide image on error (used with onerror="this.classList.add('hidden')") ===== */
+.detail-panel-image img.hidden {
+    display: none !important;
+}
+
 .detail-panel-image img[style*="display: none"] {
     display: none !important;
 }

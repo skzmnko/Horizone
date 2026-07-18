@@ -69,18 +69,8 @@ class MapService {
         this.scaleControl = L.control({ position: 'bottomright' });
 
         this.scaleControl.onAdd = () => {
-            this.scaleContainer = L.DomUtil.create('div', 'leaflet-control-scale');
-            this.scaleContainer.style.background = 'rgba(255, 255, 255, 0.85)';
-            this.scaleContainer.style.color = '#000000';
-            this.scaleContainer.style.padding = '4px 8px';
-            this.scaleContainer.style.borderRadius = '4px';
-            this.scaleContainer.style.fontSize = '12px';
-            this.scaleContainer.style.fontWeight = 'bold';
-            this.scaleContainer.style.marginBottom = '10px';
-            this.scaleContainer.style.border = '1px solid rgba(0, 0, 0, 0.3)';
-            this.scaleContainer.style.textShadow = 'none';
-            this.scaleContainer.style.backdropFilter = 'blur(2px)';
-
+            this.scaleContainer = L.DomUtil.create('div', 'leaflet-control-scale leaflet-control-scale-custom');
+            // Класс leaflet-control-scale-custom определён в markers.css
             return this.scaleContainer;
         };
 

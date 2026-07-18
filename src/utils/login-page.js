@@ -39,7 +39,7 @@ class LoginPage {
                 ${this.renderForm()}
 
                 <div id="login-error" class="error-message hidden"></div>
-                <div id="login-info" class="error-message hidden" style="background:rgba(26,127,127,0.15); border-color:rgba(26,127,127,0.4); color:#bfe8e8;"></div>
+                <div id="login-info" class="error-message hidden"></div>
 
                 <div class="login-footer">
                     ${this.renderFooterLinks()}
@@ -282,6 +282,7 @@ class LoginPage {
 
     showInfo(message) {
         const el = document.getElementById('login-info');
+        el.className = 'error-message login-info'; // добавляем класс login-info
         el.textContent = message;
         el.classList.remove('hidden');
     }

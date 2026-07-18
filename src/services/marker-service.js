@@ -37,9 +37,8 @@ class MarkerService {
         return L.divIcon({
             className: `custom-icon custom-icon-${type}`,
             html: `<img src="${iconUrls[type]}" alt="${typeDisplayName}" 
-                   style="width:${baseSize}px; height:${baseSize}px; 
-                          object-fit:contain; 
-                          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`,
+                   style="width:${baseSize}px; height:${baseSize}px;">`,
+            // object-fit и filter вынесены в CSS (.custom-icon img)
             iconSize: [baseSize, baseSize],
             iconAnchor: [baseSize/2, baseSize/2],
             popupAnchor: [0, -baseSize/2]

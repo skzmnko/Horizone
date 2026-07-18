@@ -588,3 +588,56 @@
         max-width: 85vw;
     }
 }
+
+/* ===== NEW: DM Coordinate Picker display (extracted from JS) ===== */
+.dm-coords-display {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(26, 127, 127, 0.5);
+    border-radius: 8px;
+    padding: 12px 20px;
+    color: #ffffff;
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 9999;
+    min-width: 250px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+.dm-coords-title {
+    color: #7fbfbf;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.dm-coords-values {
+    font-size: 16px;
+    color: #ffffff;
+}
+.dm-coords-pixels {
+    font-size: 12px;
+    color: #a3a3a3;
+    margin-top: 4px;
+}
+.dm-coords-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 6px;
+}
+/* Temp marker icon (used in coordinate picker) */
+.dm-temp-marker-icon {
+    width: 14px;
+    height: 14px;
+    background: #1a7f7f;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(26, 127, 127, 0.5);
+}

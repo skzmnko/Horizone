@@ -245,6 +245,13 @@
     margin-top: 16px;
 }
 
+/* ===== NEW: info message (extracted from JS) ===== */
+.login-info {
+    background: rgba(26, 127, 127, 0.15);
+    border-color: rgba(26, 127, 127, 0.4);
+    color: #bfe8e8;
+}
+
 .login-footer {
     text-align: center;
     margin-top: 24px;
@@ -283,4 +290,3 @@
 .login-back-link:hover {
     color: var(--mg-text-secondary);
 }
-

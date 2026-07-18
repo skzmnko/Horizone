@@ -169,7 +169,7 @@ class DetailPanelService {
                 <div class="detail-panel-section">
                     <span class="detail-panel-label">Изображение</span>
                     <div class="detail-panel-image">
-                        <img src="${location.image}" alt="${location.name}" loading="lazy" onerror="this.style.display='none'">
+                        <img src="${location.image}" alt="${location.name}" loading="lazy" onerror="this.classList.add('hidden')">
                     </div>
                 </div>
                 ` : ''}

@@ -192,3 +192,9 @@
     background: rgba(255, 107, 107, 0.12) !important;
     border-left-color: rgba(255, 107, 107, 0.7);
 }
+
+/* ===== NEW: no results message (extracted from JS) ===== */
+.search-no-results {
+    color: #a3a3a3;
+    cursor: default;
+}
