@@ -35,7 +35,7 @@ class ResetPasswordPage {
                         <input type="password" id="new-password-confirm" name="new-password-confirm" required autocomplete="new-password" placeholder="Ещё раз">
                     </div>
 
-                    <button type="submit" class="login-btn" id="reset-password-submit">
+                    <button type="submit" class="login-btn" id="reset-password-submit" disabled>
                         <span class="btn-text">Сохранить пароль</span>
                     </button>
                 </form>
@@ -46,12 +46,37 @@ class ResetPasswordPage {
         document.body.appendChild(this.container);
     }
 
+    // Проверяет, заполнены ли обязательные поля, и переключает disabled у кнопки submit
+    updateSubmitState() {
+        const submitBtn = document.getElementById('reset-password-submit');
+        if (!submitBtn) return;
+
+        const requiredIds = ['new-password', 'new-password-confirm'];
+        const allFilled = requiredIds.every(id => {
+            const field = document.getElementById(id);
+            return field && field.value.trim().length > 0;
+        });
+
+        submitBtn.disabled = !allFilled;
+    }
+
     bindEvents() {
         const form = document.getElementById('reset-password-form');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleSubmit();
         });
+
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                this.hideError();
+                this.updateSubmitState();
+            });
+        });
+
+        // Устанавливаем корректное состояние кнопки сразу после рендера формы
+        this.updateSubmitState();
     }
 
     async handleSubmit() {
@@ -73,17 +98,18 @@ class ResetPasswordPage {
         }
 
         btn.disabled = true;
+        btn.classList.add('loading');
         btnText.textContent = 'Сохранение...';
 
         const result = await AuthService.updatePassword(password);
-
-        btn.disabled = false;
-        btnText.textContent = 'Сохранить пароль';
 
         if (result.success) {
             this.hide();
             if (this.onDone) this.onDone();
         } else {
+            btn.classList.remove('loading');
+            btnText.textContent = 'Сохранить пароль';
+            this.updateSubmitState();
             this.showError(result.error);
         }
     }

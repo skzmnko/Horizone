@@ -74,7 +74,7 @@ class LoginPage {
             <label for="password-confirm">${t('login.passwordConfirmLabel')}</label>
             <input type="password" id="password-confirm" name="password-confirm" required autocomplete="new-password" placeholder="${t('login.passwordConfirmPlaceholder')}">
           </div>
-          <button type="submit" class="login-btn" id="login-submit">
+          <button type="submit" class="login-btn" id="login-submit" disabled>
             <span class="btn-text">${t('login.registerButton')}</span>
           </button>
         </form>
@@ -88,7 +88,7 @@ class LoginPage {
             <label for="email">${t('login.emailLabel')}</label>
             <input type="email" id="email" name="email" required autocomplete="username" placeholder="${t('login.emailPlaceholder')}">
           </div>
-          <button type="submit" class="login-btn" id="login-submit">
+          <button type="submit" class="login-btn" id="login-submit" disabled>
             <span class="btn-text">${t('login.resetButton')}</span>
           </button>
         </form>
@@ -106,7 +106,7 @@ class LoginPage {
           <label for="password">${t('login.passwordLabel')}</label>
           <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="${t('login.passwordPlaceholder')}">
         </div>
-        <button type="submit" class="login-btn" id="login-submit">
+        <button type="submit" class="login-btn" id="login-submit" disabled>
           <span class="btn-text">${t('login.loginButton')}</span>
         </button>
       </form>
@@ -127,6 +127,31 @@ class LoginPage {
     `;
   }
 
+  // Возвращает список id обязательных полей для текущего режима формы
+  getRequiredFieldIds() {
+    if (this.mode === 'register') {
+      return ['display-name', 'email', 'password', 'password-confirm'];
+    }
+    if (this.mode === 'reset') {
+      return ['email'];
+    }
+    return ['email', 'password'];
+  }
+
+  // Проверяет, заполнены ли все обязательные поля, и переключает disabled у кнопки submit
+  updateSubmitState() {
+    const submitBtn = document.getElementById('login-submit');
+    if (!submitBtn) return;
+
+    const requiredIds = this.getRequiredFieldIds();
+    const allFilled = requiredIds.every(id => {
+      const field = document.getElementById(id);
+      return field && field.value.trim().length > 0;
+    });
+
+    submitBtn.disabled = !allFilled;
+  }
+
   bindEvents() {
     const loginForm = document.getElementById('login-form');
 
@@ -140,8 +165,12 @@ class LoginPage {
       input.addEventListener('input', () => {
         this.hideError();
         this.hideInfo();
+        this.updateSubmitState();
       });
     });
+
+    // Устанавливаем корректное состояние кнопки сразу после рендера формы
+    this.updateSubmitState();
 
     const switchToRegister = document.getElementById('switch-to-register');
     if (switchToRegister) switchToRegister.addEventListener('click', () => this.setMode('register'));
@@ -279,7 +308,11 @@ class LoginPage {
   setLoading(isLoading, text) {
     const loginBtn = document.getElementById('login-submit');
     const btnText = loginBtn.querySelector('.btn-text');
-    loginBtn.disabled = isLoading;
+    if (isLoading) {
+      loginBtn.disabled = true;
+    } else {
+      this.updateSubmitState();
+    }
     loginBtn.classList.toggle('loading', isLoading);
     btnText.textContent = text;
   }
