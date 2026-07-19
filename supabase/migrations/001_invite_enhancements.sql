@@ -1,30 +1,30 @@
 -- =====================================================================
--- Trace & Place — расширение системы приглашений.
--- Идемпотентно, как и предыдущая миграция.
+-- Horizone — extension of the invitation system.
+-- Idempotent, like the previous migration.
 --
--- Добавляет:
---   1) лимит использований и авторство кода приглашения;
---   2) invited_email — задел на будущее (см. README-INVITES.md):
---      персональные приглашения, которые сами найдут пользователя
---      в его личном кабинете по email, без ручного ввода кода;
---   3) redeem_invite — теперь учитывает лимит использований и явно
---      требует авторизации;
---   4) get_invite_preview — единственная RPC, которую можно вызвать
---      АНОНИМНО (без логина). Отдаёт только название мира и имя DM —
---      этого достаточно, чтобы показать баннer "Тебя пригласили в
---      мир «Ораска»" на экране логина/регистрации, не раскрывая
---      ничего больше неавторизованному человеку.
+-- Adds:
+--   1) usage limit and authorship to the invitation code;
+--   2) invited_email — a placeholder for future use (see README-INVITES.md):
+--      personal invitations that will find the user in their personal
+--      cabinet by email, without manual code entry;
+--   3) redeem_invite — now respects the usage limit and explicitly
+--      requires authentication;
+--   4) get_invite_preview — the only RPC that can be called
+--      ANONYMOUSLY (without login). Returns only the world name and DM name —
+--      this is enough to show a banner like "You have been invited to
+--      the world «Oraska»" on the login/registration screen, without
+--      revealing anything more to an unauthorized person.
 -- =====================================================================
 
 alter table world_invites add column if not exists max_uses integer;
 alter table world_invites add column if not exists uses_count integer not null default 0;
 alter table world_invites add column if not exists created_by uuid references auth.users(id);
 
--- Задел на будущее: персональное приглашение на конкретный email.
--- Пока не используется в текущем флоу (см. `redeem_invite`) — код
--- работает как обычный, невзирая на это поле. Когда будет сделан
--- личный кабинет с входящими приглашениями, здесь же можно будет
--- матчить их по email пользователя без изменения структуры таблицы.
+-- Future-proofing: personal invitation to a specific email.
+-- Not currently used in the current flow (see `redeem_invite`) — the code
+-- works as a regular one, regardless of this field. When a personal account
+-- with incoming invitations is implemented, this same field can be used to
+-- match them by the user's email without changing the table structure.
 alter table world_invites add column if not exists invited_email text;
 
 
@@ -58,9 +58,9 @@ begin
     select 1 from world_members where world_id = _world_id and user_id = auth.uid()
   ) into _already_member;
 
-  -- Если пользователь уже состоит в мире (повторно перешёл по той же
-  -- ссылке) — просто возвращаем world_id, не трогая лимит использований
-  -- и не перезаписывая уже выбранное имя персонажа.
+  -- If the user is already a member of the world (re-entered via the same
+  -- link) — just return the world_id, without touching the usage limit
+  -- and without overwriting the already chosen character name.
   if not _already_member then
     if _max_uses is not null and _uses_count >= _max_uses then
       raise exception 'Invite code has reached its usage limit';
@@ -76,8 +76,8 @@ begin
 end;
 $$;
 
--- Публичный (анонимный) предпросмотр приглашения — по коду отдаёт
--- только название мира и имя мастера, без доступа к самим данным мира.
+-- Public (anonymous) invitation preview — given the code, returns
+-- only the world name and the master's name, without granting access to the world data itself.
 create or replace function get_invite_preview(_code text)
 returns table(world_name text, dm_name text)
 language sql
@@ -97,8 +97,7 @@ $$;
 
 grant execute on function get_invite_preview(text) to anon, authenticated;
 
--- Список активных приглашений мира — для DM-панели ("мои коды
--- приглашений" со статусом использования и возможностью отозвать).
+-- List of active world invitations — for the DM panel ("my invite codes" with usage status and the ability to revoke).
 create or replace function get_world_invites(_world_id uuid)
 returns table(
   id uuid,
@@ -122,5 +121,5 @@ $$;
 grant execute on function get_world_invites(uuid) to authenticated;
 
 -- =====================================================================
--- Конец.
+-- End.
 -- =====================================================================

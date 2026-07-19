@@ -29,8 +29,8 @@ export default {
     errorInvalidCredentials: 'Invalid email or password',
     errorUserAlreadyRegistered: 'User already registered',
     errorPasswordShort: 'Password must be at least 6 characters',
-    errorEmailNotConfirmed: 'Email not confirmed – check your inbox',
-    errorDisplayNameTaken: 'This name is already taken – choose another',
+    errorEmailNotConfirmed: 'Email not confirmed, check your inbox',
+    errorDisplayNameTaken: 'This name is already taken',
     errorDisplayNameRequired: 'Please enter a display name',
     errorPasswordsDoNotMatch: 'Passwords do not match',
     errorGeneric: 'Something went wrong',
@@ -39,6 +39,6 @@ export default {
 
     // Info messages
     infoEmailSent: 'If an account with that email exists, a password reset link has been sent.',
-    infoRegistrationSuccess: 'Almost done! We sent an email to {email} – click the link to confirm your registration, then sign in.',
+    infoRegistrationSuccess: 'Almost done! We sent an email to {email}, click the link to confirm your registration, then sign in.',
   }
 };

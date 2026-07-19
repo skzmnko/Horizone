@@ -25,6 +25,24 @@ class AuthService {
     });
     if (error) {
       console.warn('❌ Sign up error:', error.message);
+
+      // IMPORTANT: Supabase Auth (GoTrue) deliberately does not forward to the
+      // client the reason for a failure in the trigger that creates the profiles
+      // record — it always returns the same generic text ("Database error
+      // saving new user") regardless of what exactly went wrong inside the
+      // trigger. Matching a specific cause ("display_name is already taken") to
+      // this text is unreliable and will break with any change to the wording on
+      // the Supabase side.
+      //
+      // Therefore, instead of guessing based on error.message, we ASK THE
+      // DATABASE directly whether the name is free right now — since signUp()
+      // failed and the name suddenly became taken, that is almost certainly the
+      // cause of the failure.
+      const nameStillAvailable = await this.checkDisplayNameAvailable(displayName);
+      if (!nameStillAvailable) {
+        return { success: false, errorCode: ERROR_CODES.DISPLAY_NAME_TAKEN };
+      }
+
       return { success: false, errorCode: mapSupabaseErrorToCode(error.message) };
     }
     const needsEmailConfirmation = !data.session;
