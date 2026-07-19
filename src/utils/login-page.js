@@ -7,6 +7,7 @@ class LoginPage {
     this.container = null;
     this.onLoginSuccess = null;
     this.mode = 'login';
+    this.pendingInfo = null;
   }
 
   initialize(onLoginSuccess) {
@@ -16,10 +17,23 @@ class LoginPage {
     this.bindEvents();
   }
 
-  setMode(mode) {
+  // info — сообщение, которое должно быть видно сразу после смены режима
+  // (например, "проверьте почту" после регистрации). Раньше оно
+  // устанавливалось отдельным вызовом showInfo() уже ПОСЛЕ смены режима,
+  // из-за чего сообщение попадало в старый, уже пересозданный render() и
+  // визуально не появлялось. Теперь оно передаётся в render() и попадает
+  // в разметку сразу в видимом состоянии.
+  setMode(mode, info = null) {
     this.mode = mode;
+    this.pendingInfo = info;
     this.render();
     this.bindEvents();
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   render() {
@@ -31,6 +45,9 @@ class LoginPage {
     this.container.id = 'login-page';
     this.container.className = 'login-page';
 
+    const infoMessage = this.pendingInfo;
+    this.pendingInfo = null;
+
     this.container.innerHTML = `
       <img src="/logo.svg" alt="${t('common.appName')}" class="login-logo">
 
@@ -38,7 +55,7 @@ class LoginPage {
         ${this.renderForm()}
 
         <div id="login-error" class="error-message hidden"></div>
-        <div id="login-info" class="error-message hidden"></div>
+        <div id="login-info" class="error-message login-info${infoMessage ? '' : ' hidden'}">${infoMessage ? this.escapeHtml(infoMessage) : ''}</div>
 
         <div class="login-footer">
           ${this.renderFooterLinks()}
@@ -55,6 +72,15 @@ class LoginPage {
   }
 
   renderForm() {
+    if (this.mode === 'confirm-email') {
+      return `
+        <div class="login-header">
+          <h1>${t('login.checkEmailTitle')}</h1>
+        </div>
+        <form id="login-form" class="login-form"></form>
+      `;
+    }
+
     if (this.mode === 'register') {
       return `
         <form id="login-form" class="login-form">
@@ -114,6 +140,9 @@ class LoginPage {
   }
 
   renderFooterLinks() {
+    if (this.mode === 'confirm-email') {
+      return `<button type="button" class="login-back-link" id="switch-to-login">${t('login.continueToLogin')}</button>`;
+    }
     if (this.mode === 'register') {
       return `<button type="button" class="login-back-link" id="switch-to-login">${t('login.switchToLogin')}</button>`;
     }
@@ -155,22 +184,24 @@ class LoginPage {
   bindEvents() {
     const loginForm = document.getElementById('login-form');
 
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleSubmit();
-    });
-
-    const inputs = loginForm.querySelectorAll('input');
-    inputs.forEach(input => {
-      input.addEventListener('input', () => {
-        this.hideError();
-        this.hideInfo();
-        this.updateSubmitState();
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSubmit();
       });
-    });
 
-    // Устанавливаем корректное состояние кнопки сразу после рендера формы
-    this.updateSubmitState();
+      const inputs = loginForm.querySelectorAll('input');
+      inputs.forEach(input => {
+        input.addEventListener('input', () => {
+          this.hideError();
+          this.hideInfo();
+          this.updateSubmitState();
+        });
+      });
+
+      // Устанавливаем корректное состояние кнопки сразу после рендера формы
+      this.updateSubmitState();
+    }
 
     const switchToRegister = document.getElementById('switch-to-register');
     if (switchToRegister) switchToRegister.addEventListener('click', () => this.setMode('register'));
@@ -256,8 +287,7 @@ class LoginPage {
     }
 
     if (result.needsEmailConfirmation) {
-      this.setMode('login');
-      this.showInfo(t('login.infoRegistrationSuccess', { email }));
+      this.setMode('confirm-email', t('login.infoRegistrationSuccess', { email }));
       return;
     }
 

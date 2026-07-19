@@ -24,6 +24,8 @@ export default {
     switchToLogin: 'Уже есть аккаунт? Войти',
     switchToLoginFromReset: 'Вспомнили пароль? Войти',
     switchToReset: 'Забыли пароль?',
+    checkEmailTitle: 'Проверь почту',
+    continueToLogin: 'Перейти ко входу',
 
     // Error messages (keys match error codes)
     errorInvalidCredentials: 'Неверный email или пароль',

@@ -9,22 +9,21 @@ export const ERROR_CODES = {
   NETWORK_ERROR: 'network_error'
 };
 
-// Сообщения ниже — это стабильные, документированные строки, которые
-// Supabase Auth (GoTrue) возвращает НАПРЯМУЮ для конкретных, понятных
-// ему самому ситуаций (неверный пароль, дубль email и т.д.) — их текст
-// не зависит от наших триггеров, и сопоставлять его по подстроке безопасно.
+// The messages below are stable, documented strings that Supabase Auth (GoTrue)
+// returns DIRECTLY for specific, well-understood scenarios (incorrect password,
+// duplicate email, etc.) — their text is independent of our triggers, so
+// substring matching against them is safe.
 //
-// ВАЖНО: этого нельзя сказать про ошибки, возникающие ВНУТРИ наших
-// собственных Postgres-триггеров (например, в handle_new_user при
-// создании профиля) — GoTrue намеренно скрывает их настоящую причину
-// от клиента и всегда возвращает один и тот же обобщённый текст
-// ("Database error saving new user"), из соображений безопасности не
-// раскрывая имена констрейнтов/таблиц. Различить ТАКИЕ ошибки по
-// тексту невозможно в принципе — нужна отдельная, авторитетная проверка
-// через собственный RPC. Именно поэтому здесь такой записи больше нет:
-// AuthService.signUp() сам перепроверяет самого вероятного кандидата
-// (занятость display_name) до того, как обратиться к этой функции —
-// см. комментарий там.
+// IMPORTANT: the same does NOT apply to errors arising INSIDE our own Postgres
+// triggers (e.g., in handle_new_user during profile creation) — GoTrue
+// intentionally obscures their root cause from the client and always returns
+// the same generic text ("Database error saving new user"), for security
+// reasons, without exposing constraint/table names. Distinguishing SUCH errors
+// by text alone is fundamentally impossible — a separate, authoritative
+// verification via our own RPC endpoint is required. This is precisely why such
+// a case is no longer mapped here: AuthService.signUp() itself re-verifies the
+// most likely culprit (display_name already taken) before even calling this
+// function — see the comment there.
 const KNOWN_MESSAGES = [
   { code: ERROR_CODES.INVALID_CREDENTIALS, match: 'invalid login credentials' },
   { code: ERROR_CODES.USER_ALREADY_REGISTERED, match: 'user already registered' },
@@ -38,10 +37,6 @@ export const mapSupabaseErrorToCode = (supabaseMessage) => {
     return ERROR_CODES.GENERIC;
   }
 
-  // Сопоставляем без учёта регистра/лишних пробелов и по вхождению
-  // подстроки, а не точному равенству всей строки — так сопоставление
-  // переживёт мелкие изменения формулировки на стороне Supabase
-  // (лишний пробел, изменённая пунктуация и т.п.), а не ломается молча.
   const normalized = supabaseMessage.trim().toLowerCase();
 
   const found = KNOWN_MESSAGES.find(({ match }) => normalized.includes(match));

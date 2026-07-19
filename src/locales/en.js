@@ -24,6 +24,8 @@ export default {
     switchToLogin: 'Already have an account? Sign in',
     switchToLoginFromReset: 'Remember your password? Sign in',
     switchToReset: 'Forgot password?',
+    checkEmailTitle: 'Check your email',
+    continueToLogin: 'Continue to sign in',
 
     // Error messages (keys match error codes)
     errorInvalidCredentials: 'Invalid email or password',
