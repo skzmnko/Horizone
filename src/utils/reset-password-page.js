@@ -18,7 +18,7 @@ class ResetPasswordPage {
         this.container.innerHTML = `
             <div class="login-container">
                 <div class="login-header">
-                    <img src="/logo.png" alt="Trace & Place" class="login-logo">
+                    <img src="/logo.svg" alt="Horizone" class="login-logo">
                     <h1>Новый пароль</h1>
                     <p>Придумай новый пароль для входа</p>
                 </div>

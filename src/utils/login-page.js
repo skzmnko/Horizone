@@ -34,9 +34,7 @@ class LoginPage {
     this.container.innerHTML = `
       <div class="login-container">
         <div class="login-header">
-          <img src="/logo.png" alt="${t('common.appName')}" class="login-logo">
-          <h1>${t('login.title')}</h1>
-          <p>${t('login.subtitle')}</p>
+          <img src="/logo.svg" alt="${t('common.appName')}" class="login-logo">
         </div>
 
         ${this.renderForm()}

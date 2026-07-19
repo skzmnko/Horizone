@@ -43,9 +43,7 @@ class WorldSelectionPage {
         this.container.innerHTML = `
             <div class="tp-header">
                 <button class="tp-logout-btn" id="tp-logout-btn">Выйти</button>
-                <img src="/logo.png" alt="Trace & Place" class="tp-logo-img">
-                <div class="tp-logo">Trace &amp; Place <span class="tp-short">(T&amp;P)</span></div>
-                <div class="tp-tagline">Interactive Maps</div>
+                <img src="/logo.svg" alt="Horizone" class="tp-logo-img">
             </div>
 
             <div class="tp-section-title">Worlds</div>
