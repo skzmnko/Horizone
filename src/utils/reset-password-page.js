@@ -16,9 +16,10 @@ class ResetPasswordPage {
         this.container = document.createElement('div');
         this.container.className = 'login-page';
         this.container.innerHTML = `
+            <img src="/logo.svg" alt="Horizone" class="login-logo">
+
             <div class="login-container">
                 <div class="login-header">
-                    <img src="/logo.svg" alt="Horizone" class="login-logo">
                     <h1>Новый пароль</h1>
                     <p>Придумай новый пароль для входа</p>
                 </div>

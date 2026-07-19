@@ -32,11 +32,9 @@ class LoginPage {
     this.container.className = 'login-page';
 
     this.container.innerHTML = `
-      <div class="login-container">
-        <div class="login-header">
-          <img src="/logo.svg" alt="${t('common.appName')}" class="login-logo">
-        </div>
+      <img src="/logo.svg" alt="${t('common.appName')}" class="login-logo">
 
+      <div class="login-container">
         ${this.renderForm()}
 
         <div id="login-error" class="error-message hidden"></div>
