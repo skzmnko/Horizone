@@ -30,7 +30,7 @@ export default {
     // Error messages (keys match error codes)
     errorInvalidCredentials: 'Invalid email or password',
     errorUserAlreadyRegistered: 'User already registered',
-    errorPasswordShort: 'Password must be at least 6 characters',
+    errorPasswordTooShort: 'Password should be at least 6 characters',
     errorEmailNotConfirmed: 'Email not confirmed, check your inbox',
     errorDisplayNameTaken: 'This account name is already taken',
     errorDisplayNameRequired: 'Please enter an account name',

@@ -263,7 +263,7 @@ class LoginPage {
     }
 
     if (password.length < 6) {
-      this.showError(t('login.errorPasswordShort'));
+      this.showError(t('login.errorPasswordTooShort'));
       return;
     }
 

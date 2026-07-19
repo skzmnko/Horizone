@@ -30,7 +30,7 @@ export default {
     // Error messages (keys match error codes)
     errorInvalidCredentials: 'Неверный email или пароль',
     errorUserAlreadyRegistered: 'Пользователь с таким email уже зарегистрирован',
-    errorPasswordShort: 'Пароль должен быть не короче 6 символов',
+    errorPasswordTooShort: 'Пароль должен быть не короче 6 символов',
     errorEmailNotConfirmed: 'Email не подтверждён — проверь почту',
     errorDisplayNameTaken: 'Это имя пользователя уже занято — выбери другое',
     errorDisplayNameRequired: 'Введи имя пользователя',
