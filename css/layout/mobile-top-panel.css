@@ -1,5 +1,3 @@
-/* Mobile Top Panel */
-
 .mobile-top-panel {
     position: fixed;
     top: 0;
@@ -18,7 +16,6 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Mobile top panel visible on mobile devices only */
 @media (max-width: 768px) {
     .mobile-top-panel {
         display: flex !important;
@@ -45,7 +42,6 @@
     flex-shrink: 0;
 }
 
-/* Mobile action buttons - common styles */
 .mobile-search-btn,
 .mobile-filter-btn,
 .mobile-dm-tools-btn,
@@ -64,7 +60,6 @@
     width: 32px;
 }
 
-/* Interactive buttons (search, filter, reset) */
 .mobile-search-btn,
 .mobile-filter-btn,
 .mobile-reset-btn {
@@ -96,7 +91,6 @@
     box-shadow: var(--mg-glow);
 }
 
-/* DM Tools button - disabled state */
 .mobile-dm-tools-btn {
     opacity: 0.4;
     cursor: not-allowed;
@@ -127,7 +121,6 @@
     flex-shrink: 0;
 }
 
-/* Hide mobile buttons on desktop */
 @media (min-width: 769px) {
     .mobile-search-btn,
     .mobile-filter-btn,
@@ -138,7 +131,6 @@
     }
 }
 
-/* Mobile Search Panel */
 .mobile-search-panel {
     position: fixed;
     top: var(--mg-mobile-top-panel-height);
@@ -210,7 +202,6 @@
     display: block;
 }
 
-/* Responsive for very small screens */
 @media (max-width: 480px) {
     .mobile-top-panel {
         padding: 0 10px;
