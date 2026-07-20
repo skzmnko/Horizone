@@ -7,7 +7,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: var(--mg-font-body);
     background: var(--mg-bg-primary);
     color: var(--mg-text-primary);
     overflow: hidden;
@@ -50,13 +50,35 @@ body.app-loading #dm-tools-panel-container {
     height: 100vh;
     z-index: -1;
     overflow: hidden;
-    background: 
+    background:
         radial-gradient(
             ellipse at center,
-            rgba(10, 20, 30, 0.95) 0%,
-            rgba(5, 15, 25, 0.9) 50%,
-            rgba(0, 5, 10, 0.95) 100%
+            rgba(28, 24, 18, 0.95) 0%,
+            rgba(16, 14, 10, 0.92) 50%,
+            rgba(6, 5, 4, 0.97) 100%
         );
+}
+
+/* Faint cartographer's grid + vignette, purely decorative, sits behind the
+   Leaflet canvas so it never interferes with map interaction. */
+.map-background::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(201, 162, 74, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 162, 74, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.35;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+}
+
+.map-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 220px rgba(0, 0, 0, 0.85);
+    pointer-events: none;
 }
 
 .leaflet-container {

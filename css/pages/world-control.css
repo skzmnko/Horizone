@@ -4,7 +4,9 @@
 }
 
 .wc-title {
-    font-size: 28px;
+    font-size: 26px;
+    font-family: var(--mg-font-display);
+    color: var(--mg-text-primary);
 }
 
 .wc-map-section {
@@ -20,16 +22,17 @@
     width: 100%;
     max-width: 480px;
     aspect-ratio: 16 / 9;
-    border-radius: 14px;
+    border-radius: var(--mg-radius-xl);
     overflow: hidden;
     cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    border: 1px solid var(--mg-border-light);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .wc-map-block:hover {
     transform: translateY(-2px);
-    border-color: rgba(255,255,255,0.25);
+    border-color: var(--mg-gold-muted);
+    box-shadow: var(--mg-gold-glow);
 }
 
 .wc-map-placeholder {
@@ -58,8 +61,9 @@
     transform: translate(-50%, -50%);
     z-index: 1;
     font-size: 18px;
-    font-weight: 700;
-    color: #ffffff;
+    font-weight: 600;
+    font-family: var(--mg-font-display);
+    color: var(--mg-text-primary);
     text-align: center;
     padding: 0 16px;
     text-transform: uppercase;
@@ -74,7 +78,7 @@
     right: 0;
     padding: 8px;
     background: rgba(0,0,0,0.55);
-    color: #e5e7eb;
+    color: var(--mg-text-primary);
     font-size: 12px;
     text-align: center;
     opacity: 0;
@@ -96,17 +100,19 @@
 }
 
 .wc-section {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
+    background: var(--mg-bg-panel);
+    border: 1px solid var(--mg-border);
+    border-radius: var(--mg-radius-xl);
     padding: 20px;
     margin-bottom: 24px;
 }
 
 .wc-section-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #e5e7eb;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--mg-font-display);
+    color: var(--mg-text-accent);
+    letter-spacing: 0.5px;
     margin-bottom: 14px;
 }
 
@@ -123,15 +129,15 @@
     align-items: center;
     gap: 6px;
     font-size: 0.85rem;
-    color: #a7adbd;
+    color: var(--mg-text-secondary);
     cursor: pointer;
 }
 
 .dm-invite-expiry-select {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #e5e7eb;
-    border-radius: 6px;
+    background: var(--mg-bg-secondary);
+    border: 1px solid var(--mg-border-light);
+    color: var(--mg-text-primary);
+    border-radius: var(--mg-radius-md);
     padding: 6px 10px;
     font-size: 0.85rem;
 }
@@ -143,7 +149,7 @@
 
 .dm-empty-list {
     text-align: center;
-    color: #a7adbd;
+    color: var(--mg-text-secondary);
     font-style: italic;
     font-size: 0.9rem;
     padding: 12px 0;
@@ -151,7 +157,7 @@
 
 .dm-invite-item {
     padding: 10px 4px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid var(--mg-border);
 }
 
 .dm-invite-item:last-child {
@@ -162,13 +168,13 @@
     font-family: monospace;
     font-size: 1rem;
     letter-spacing: 1px;
-    color: #ffffff;
+    color: var(--mg-gold-hover);
     font-weight: 600;
 }
 
 .dm-invite-meta {
     font-size: 0.78rem;
-    color: #a7adbd;
+    color: var(--mg-text-secondary);
     margin-top: 2px;
 }
 
@@ -180,10 +186,10 @@
 
 .dm-invite-copy-btn {
     flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #e5e7eb;
-    border-radius: 6px;
+    background: var(--mg-bg-secondary);
+    border: 1px solid var(--mg-border-light);
+    color: var(--mg-text-primary);
+    border-radius: var(--mg-radius-md);
     padding: 6px 12px;
     font-size: 0.8rem;
     cursor: pointer;
@@ -191,16 +197,17 @@
 }
 
 .dm-invite-copy-btn:hover {
-    background: rgba(255,255,255,0.1);
+    background: var(--mg-hover);
+    border-color: var(--mg-accent-muted);
 }
 
 .dm-invite-revoke-btn {
     background: none;
     border: none;
-    color: #a7adbd;
+    color: var(--mg-text-secondary);
     cursor: pointer;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: var(--mg-radius-md);
     transition: all 0.2s ease;
 }
 
@@ -211,7 +218,7 @@
 
 .wc-section-hint {
     font-size: 0.82rem;
-    color: #a7adbd;
+    color: var(--mg-text-secondary);
     margin: -8px 0 14px;
     line-height: 1.4;
 }

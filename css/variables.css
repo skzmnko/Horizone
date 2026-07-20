@@ -1,42 +1,53 @@
 /* Global CSS Variables */
 :root {
     /* Colors - Backgrounds */
-    --mg-bg-primary: #0a0a0a;
-    --mg-bg-secondary: #1a1a1a;
-    --mg-bg-panel: rgba(30, 30, 30, 0.95);
-    
-    /* Colors - Accent */
+    --mg-bg-primary: #0a0908;
+    --mg-bg-secondary: #1a1815;
+    --mg-bg-panel: rgba(24, 22, 19, 0.95);
+
+    /* Colors - Accent (arcane teal — interactive states, links, glow) */
     --mg-accent: #1a7f7f;
     --mg-accent-hover: #2a9f9f;
     --mg-accent-light: rgba(26, 127, 127, 0.15);
     --mg-accent-muted: rgba(26, 127, 127, 0.4);
-    
+
+    /* Colors - Gold (cartographer ink — headings, ornament, primary actions) */
+    --mg-gold: #c9a24a;
+    --mg-gold-hover: #e2c06a;
+    --mg-gold-light: rgba(201, 162, 74, 0.14);
+    --mg-gold-muted: rgba(201, 162, 74, 0.4);
+    --mg-gold-glow: 0 0 10px rgba(201, 162, 74, 0.35);
+
     /* Colors - Text */
-    --mg-text-primary: #ffffff;
-    --mg-text-secondary: #a3a3a3;
-    --mg-text-muted: #6b7280;
+    --mg-text-primary: #f2ede3;
+    --mg-text-secondary: #a8a196;
+    --mg-text-muted: #726b60;
     --mg-text-accent: #7fbfbf;
-    
+
     /* Colors - Borders */
-    --mg-border: #374151;
-    --mg-border-light: #4b5563;
-    
+    --mg-border: #3a352c;
+    --mg-border-light: #524b3d;
+
     /* Colors - States */
     --mg-hover: rgba(26, 127, 127, 0.08);
     --mg-active: rgba(26, 127, 127, 0.2);
-    
+
     /* Shadows */
     --mg-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
     --mg-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
     --mg-glow: 0 0 8px rgba(26, 127, 127, 0.3);
-    
+
     /* Popup */
-    --mg-popup-header-bg: #1a1a1a;
-    --mg-popup-header-border: #374151;
-    
+    --mg-popup-header-bg: #1a1815;
+    --mg-popup-header-border: #3a352c;
+
+    /* Typography */
+    --mg-font-display: 'Cinzel', serif;
+    --mg-font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
     /* Sizes */
     --mg-mobile-top-panel-height: 56px;
-    
+
     /* Border Radius */
     --mg-radius-sm: 4px;
     --mg-radius-md: 6px;

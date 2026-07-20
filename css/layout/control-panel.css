@@ -45,12 +45,41 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     padding-bottom: 18px;
-    border-bottom: 2px solid var(--mg-border);
+    border-bottom: none;
     position: relative;
     text-align: center;
     flex-shrink: 0;
+}
+
+/* Ornamental divider replacing the flat border: a thin gold line with a
+   small diamond mark at the centre, evoking a hand-drawn map cartouche. */
+.panel-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--mg-border-light) 15%,
+        var(--mg-gold-muted) 50%,
+        var(--mg-border-light) 85%,
+        transparent 100%);
+}
+
+.panel-header::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    width: 7px;
+    height: 7px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--mg-gold);
+    box-shadow: var(--mg-gold-glow);
 }
 
 .panel-header h3 {
@@ -64,7 +93,7 @@
     text-transform: uppercase;
     letter-spacing: 1.5px;
     flex: 1;
-    font-family: 'Cinzel', serif;
+    font-family: var(--mg-font-display);
     font-weight: 500;
     text-shadow: 0 0 10px rgba(26, 127, 127, 0.3);
 }
@@ -78,11 +107,12 @@
 
 .layers-section h4 {
     color: var(--mg-text-muted);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 0 0 12px 0;
+    letter-spacing: 1.5px;
+    margin: 0 0 14px 0;
     font-weight: 600;
+    font-family: var(--mg-font-display);
 }
 
 .map-controls {
