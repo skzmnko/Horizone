@@ -17,12 +17,6 @@ class LoginPage {
     this.bindEvents();
   }
 
-  // info — сообщение, которое должно быть видно сразу после смены режима
-  // (например, "проверьте почту" после регистрации). Раньше оно
-  // устанавливалось отдельным вызовом showInfo() уже ПОСЛЕ смены режима,
-  // из-за чего сообщение попадало в старый, уже пересозданный render() и
-  // визуально не появлялось. Теперь оно передаётся в render() и попадает
-  // в разметку сразу в видимом состоянии.
   setMode(mode, info = null) {
     this.mode = mode;
     this.pendingInfo = info;
@@ -86,7 +80,7 @@ class LoginPage {
         <form id="login-form" class="login-form">
           <div class="form-group">
             <label for="display-name">${t('login.displayNameLabel')}</label>
-            <input type="text" id="display-name" name="display-name" required placeholder="${t('login.displayNamePlaceholder')}">
+            <input type="text" id="display-name" name="display-name" required maxlength="50" placeholder="${t('login.displayNamePlaceholder')}">
           </div>
           <div class="form-group">
             <label for="email">${t('login.emailLabel')}</label>
@@ -156,7 +150,6 @@ class LoginPage {
     `;
   }
 
-  // Возвращает список id обязательных полей для текущего режима формы
   getRequiredFieldIds() {
     if (this.mode === 'register') {
       return ['display-name', 'email', 'password', 'password-confirm'];
@@ -167,7 +160,6 @@ class LoginPage {
     return ['email', 'password'];
   }
 
-  // Проверяет, заполнены ли все обязательные поля, и переключает disabled у кнопки submit
   updateSubmitState() {
     const submitBtn = document.getElementById('login-submit');
     if (!submitBtn) return;
@@ -193,13 +185,16 @@ class LoginPage {
       const inputs = loginForm.querySelectorAll('input');
       inputs.forEach(input => {
         input.addEventListener('input', () => {
-          this.hideError();
+          if (input.id === 'display-name' && input.value.length >= 50) {
+            this.showError(t('login.errorDisplayNameTooLong'));
+          } else {
+            this.hideError();
+          }
           this.hideInfo();
           this.updateSubmitState();
         });
       });
 
-      // Устанавливаем корректное состояние кнопки сразу после рендера формы
       this.updateSubmitState();
     }
 
@@ -253,6 +248,11 @@ class LoginPage {
 
     if (!displayName) {
       this.showError(t('login.errorDisplayNameRequired'));
+      return;
+    }
+
+    if (displayName.length > 50) {
+      this.showError(t('login.errorDisplayNameTooLong'));
       return;
     }
 
@@ -316,15 +316,12 @@ class LoginPage {
     }
   }
 
-  // Исправленный метод: всегда возвращает переведённую строку
   getErrorMessage(errorCode) {
     if (!errorCode) {
       return t('login.errorGeneric');
     }
-    // Преобразуем snake_case в PascalCase для ключа
     const key = `login.error${this.toPascalCase(errorCode)}`;
     const translation = t(key);
-    // Если перевод не найден (вернулся ключ), используем generic
     if (translation === key) {
       return t('login.errorGeneric');
     }

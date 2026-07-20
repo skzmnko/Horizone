@@ -34,6 +34,7 @@ export default {
     errorEmailNotConfirmed: 'Email not confirmed, check your inbox',
     errorDisplayNameTaken: 'This account name is already taken',
     errorDisplayNameRequired: 'Please enter an account name',
+    errorDisplayNameTooLong: 'Account Name length should be 50 symbols or less',
     errorPasswordsDoNotMatch: 'Passwords do not match',
     errorGeneric: 'Something went wrong',
     errorInviteExpired: 'Invite code expired or invalid',

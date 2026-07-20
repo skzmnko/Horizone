@@ -34,6 +34,7 @@ export default {
     errorEmailNotConfirmed: 'Email не подтверждён — проверь почту',
     errorDisplayNameTaken: 'Это имя пользователя уже занято — выбери другое',
     errorDisplayNameRequired: 'Введи имя пользователя',
+    errorDisplayNameTooLong: 'Имя пользователя должно быть не длиннее 50 символов',
     errorPasswordsDoNotMatch: 'Пароли не совпадают',
     errorGeneric: 'Что-то пошло не так',
     errorInviteExpired: 'Код приглашения истёк или недействителен',
