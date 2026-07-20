@@ -3,9 +3,13 @@ import { supabase } from '../supabase-client.js';
 class WorldsService {
     // Список миров, в которых состоит текущий пользователь, с его ролью в каждом
     async getMyWorlds() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
         const { data, error } = await supabase
             .from('world_members')
             .select('role, joined_at, worlds(id, name, created_at, cover_image_path, is_public)')
+            .eq('user_id', user.id)
             .order('joined_at', { ascending: false });
 
         if (error) {
