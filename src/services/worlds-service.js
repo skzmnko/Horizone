@@ -5,7 +5,7 @@ class WorldsService {
     async getMyWorlds() {
         const { data, error } = await supabase
             .from('world_members')
-            .select('role, joined_at, worlds(id, name, created_at, cover_image_path)')
+            .select('role, joined_at, worlds(id, name, created_at, cover_image_path, is_public)')
             .order('joined_at', { ascending: false });
 
         if (error) {
@@ -18,8 +18,46 @@ class WorldsService {
             name: row.worlds.name,
             role: row.role,
             createdAt: row.worlds.created_at,
-            coverImagePath: row.worlds.cover_image_path
+            coverImagePath: row.worlds.cover_image_path,
+            isPublic: row.worlds.is_public
         }));
+    }
+
+    // Публичные миры — видны ЛЮБОМУ зарегистрированному пользователю,
+    // а не только участникам (см. RLS-политику "Users can view accessible worlds").
+    // Отдаёт только базовую информацию (без карт/локаций — они по-прежнему
+    // доступны только участникам мира).
+    async getPublicWorlds() {
+        const { data, error } = await supabase
+            .from('worlds')
+            .select('id, name, created_at, cover_image_path')
+            .eq('is_public', true)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ Error loading public worlds:', error);
+            throw error;
+        }
+
+        return data.map(w => ({
+            id: w.id,
+            name: w.name,
+            createdAt: w.created_at,
+            coverImagePath: w.cover_image_path
+        }));
+    }
+
+    // Сделать мир публичным/приватным — доступно только владельцу (проверяется RLS)
+    async setWorldVisibility(worldId, isPublic) {
+        const { error } = await supabase
+            .from('worlds')
+            .update({ is_public: isPublic })
+            .eq('id', worldId);
+
+        if (error) {
+            console.error('❌ Error updating world visibility:', error);
+            throw error;
+        }
     }
 
     // Роль текущего пользователя в конкретном мире — используется, чтобы

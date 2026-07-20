@@ -7,6 +7,7 @@ class WorldSelectionPage {
         this.container = null;
         this.onWorldSelected = null;
         this.worlds = [];
+        this.publicWorlds = [];
         this.selectedWorldIds = new Set();
     }
 
@@ -21,6 +22,15 @@ class WorldSelectionPage {
         } catch (e) {
             console.error('❌ Failed to load worlds:', e);
             this.worlds = [];
+        }
+
+        try {
+            const myIds = new Set(this.worlds.map(w => w.id));
+            const publicWorlds = await WorldsService.getPublicWorlds();
+            this.publicWorlds = publicWorlds.filter(w => !myIds.has(w.id));
+        } catch (e) {
+            console.warn('⚠️ Failed to load public worlds:', e);
+            this.publicWorlds = [];
         }
 
         this.selectedWorldIds.clear();
@@ -40,6 +50,11 @@ class WorldSelectionPage {
             ? `<div class="tp-grid">${this.worlds.map(w => this.renderCard(w)).join('')}</div>`
             : `<div class="tp-empty">У тебя пока нет ни одного мира — создай первый выше</div>`;
 
+        const publicSectionHtml = this.publicWorlds.length > 0 ? `
+            <div class="tp-section-title">🌍 Публичные миры</div>
+            <div class="tp-grid">${this.publicWorlds.map(w => this.renderPublicCard(w)).join('')}</div>
+        ` : '';
+
         this.container.innerHTML = `
             <div class="tp-header">
                 <button class="tp-logout-btn" id="tp-logout-btn">Выйти</button>
@@ -58,6 +73,8 @@ class WorldSelectionPage {
             </div>
 
             ${gridHtml}
+
+            ${publicSectionHtml}
 
             <div style="text-align:center; margin-top:32px;">
                 <button class="tp-danger-link" id="tp-delete-account-btn">Удалить мой аккаунт безвозвратно</button>
@@ -94,7 +111,31 @@ class WorldSelectionPage {
                 </div>
                 <div class="tp-card-name">
                     ${this.escapeHtml(world.name)}
-                    <span class="tp-card-role">${isDM ? '🎲 Мастер' : '🔎 Наблюдатель'}</span>
+                    <span class="tp-card-role">${isDM ? '🎲 Мастер' : '🔎 Наблюдатель'}${world.isPublic ? ' · 🌍 Публичный' : ''}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Карточка публичного мира, участником которого текущий пользователь
+    // не является — без чекбокса выбора и без смены обложки (не его мир)
+    renderPublicCard(world) {
+        const coverUrl = WorldCoverService.getPublicUrl(world.coverImagePath);
+
+        const imageHtml = coverUrl
+            ? `<img src="${coverUrl}" class="tp-card-image" alt="${this.escapeHtml(world.name)}">`
+            : `<div class="tp-card-placeholder" style="background:${this.placeholderGradient(world.name)};">
+                   <span class="tp-card-placeholder-text">${this.escapeHtml(world.name)}</span>
+               </div>`;
+
+        return `
+            <div class="tp-card tp-card-public" data-public-world-id="${world.id}">
+                <div class="tp-card-image-wrap">
+                    ${imageHtml}
+                </div>
+                <div class="tp-card-name">
+                    ${this.escapeHtml(world.name)}
+                    <span class="tp-card-role">🌍 Публичный</span>
                 </div>
             </div>
         `;
@@ -353,9 +394,15 @@ class WorldSelectionPage {
             });
         });
 
-        this.container.querySelectorAll('.tp-card').forEach(card => {
+        this.container.querySelectorAll('.tp-card:not(.tp-card-public)').forEach(card => {
             card.addEventListener('click', () => {
                 this.openWorld(card.dataset.worldId);
+            });
+        });
+
+        this.container.querySelectorAll('.tp-card-public').forEach(card => {
+            card.addEventListener('click', () => {
+                this.showError('Это публичный мир — чтобы присоединиться, попроси код приглашения у мастера этого мира.');
             });
         });
     }

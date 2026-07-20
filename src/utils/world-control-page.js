@@ -66,6 +66,15 @@ class WorldControlPage {
             </div>
 
             <div class="wc-section">
+                <div class="wc-section-title">🌍 Видимость мира</div>
+                <div class="wc-section-hint">Публичный мир виден в списке всем зарегистрированным пользователям приложения (только название и обложка — карты и локации по-прежнему доступны только участникам). Приватный мир виден только тебе.</div>
+                <label class="dm-invite-option">
+                    <input type="checkbox" id="wc-is-public" ${this.world.is_public ? 'checked' : ''}>
+                    Сделать мир публичным
+                </label>
+            </div>
+
+            <div class="wc-section">
                 <div class="wc-section-title">✉️ Приглашения</div>
                 <div class="wc-section-hint">Сгенерируй код и перешли его игроку сам (например, по почте) — он введёт его в приложении на экране выбора миров и присоединится как наблюдатель.</div>
                 <div class="dm-invite-controls">
@@ -118,6 +127,22 @@ class WorldControlPage {
         });
 
         document.getElementById('wc-create-invite-btn').addEventListener('click', () => this.handleCreateInvite());
+
+        const publicToggle = document.getElementById('wc-is-public');
+        publicToggle.addEventListener('change', async () => {
+            const isPublic = publicToggle.checked;
+            publicToggle.disabled = true;
+
+            try {
+                await WorldsService.setWorldVisibility(this.worldId, isPublic);
+                this.world.is_public = isPublic;
+            } catch (err) {
+                publicToggle.checked = !isPublic;
+                this.showError('Не удалось изменить видимость мира: ' + err.message);
+            } finally {
+                publicToggle.disabled = false;
+            }
+        });
 
         this.inviteListContainer = document.getElementById('wc-invite-list');
         this.inviteListContainer.addEventListener('click', (e) => {
