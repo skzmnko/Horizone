@@ -435,9 +435,8 @@ class WorldSelectionPage {
     }
 
     hide() {
-        if (this.container) {
-            this.container.classList.add('hidden');
-            this.container.style.display = 'none';
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
         }
     }
 }
