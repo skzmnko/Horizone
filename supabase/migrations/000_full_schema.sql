@@ -10,8 +10,9 @@
 --   001_invite_enhancements.sql
 --   002_fix_display_name_check.sql
 --   003_world_visibility.sql
+--   001_fix_world_members_visibility.sql  <-- INTEGRATED
 -- Running this single file top to bottom produces the exact same
--- end state as running all four of the original files in sequence.
+-- end state as running all five of the original files in sequence.
 -- =====================================================================
 
 
@@ -222,10 +223,10 @@ from auth.users
 on conflict (id) do nothing;
 
 -- NOTE: this initial version of is_display_name_available is
--- immediately replaced further down (see section 15, "Fix:
--- display name availability check") by a security definer version
--- that fixes the RLS bug described there. Kept here to preserve the
--- original migration history.
+-- immediately replaced further down (see section 15, "Fix: display 
+-- name availability check") by a security definer version that fixes 
+-- the RLS bug described there. Kept here to preserve the original 
+-- migration history.
 --
 -- Check whether a display_name is taken (used on the registration
 -- form before submission — this is a UX hint, not the only
@@ -309,17 +310,47 @@ on worlds for delete
 using (owner_id = auth.uid());
 
 
-drop policy if exists "Members can view membership of their worlds" on world_members;
-create policy "Members can view membership of their worlds"
-on world_members for select
-using (is_world_member(world_id));
+-- =====================================================================
+-- 6.5. FIXED: world_members RLS policies (formerly 001_fix_world_members_visibility.sql)
+-- =====================================================================
 
+-- CRITICAL FIX: Original policy allowed any member of a world to read 
+-- EVERY membership row of that world (including other users' rows), 
+-- not just their own.
+--
+-- What was wrong:
+--   "Members can view membership of their worlds" used 
+--   `is_world_member(world_id)` as the USING clause — this only checks
+--   that the CALLER is *a* member of the world, it says nothing about
+--   WHICH ROW is being read. So querying world_members returned every
+--   row belonging to that world to anyone who is a member, regardless
+--   of whose row it actually was.
+--
+-- Fix: a plain member may only read THEIR OWN membership row 
+-- (`user_id = auth.uid()`). The DM still needs to see every member of
+-- their world (for a future member-management panel) — that is already
+-- covered separately by the existing "DM can manage members" policy
+-- (`for all` / `is_world_dm(world_id)`), which stays as is.
+-- RLS policies for the same command are combined with OR, so DMs are
+-- unaffected: they still see the full membership list of worlds they
+-- run, while regular members now only ever see their own row.
+drop policy if exists "Members can view membership of their worlds" on world_members;
+drop policy if exists "Users can view their own membership" on world_members;
+create policy "Users can view their own membership" on world_members
+for select
+using (user_id = auth.uid());
+
+-- DM policy remains unchanged (covers both select and manage operations)
 drop policy if exists "DM can manage members" on world_members;
 create policy "DM can manage members"
 on world_members for all
 using (is_world_dm(world_id))
 with check (is_world_dm(world_id));
 
+
+-- =====================================================================
+-- 7. Maps RLS policies
+-- =====================================================================
 
 drop policy if exists "Members can view maps" on maps;
 create policy "Members can view maps"
@@ -332,6 +363,10 @@ on maps for all
 using (is_world_dm(world_id))
 with check (is_world_dm(world_id));
 
+
+-- =====================================================================
+-- 8. Locations RLS policies
+-- =====================================================================
 
 drop policy if exists "Members can view visible locations" on locations;
 create policy "Members can view visible locations"
@@ -358,6 +393,10 @@ with check (
 );
 
 
+-- =====================================================================
+-- 9. World invites RLS policies
+-- =====================================================================
+
 drop policy if exists "DM can manage invites" on world_invites;
 create policy "DM can manage invites"
 on world_invites for all
@@ -369,6 +408,10 @@ create policy "Authenticated users can look up invite by code"
 on world_invites for select
 using (auth.role() = 'authenticated');
 
+
+-- =====================================================================
+-- 10. Profiles RLS policies
+-- =====================================================================
 
 -- Profiles: the display name is visible to everyone authenticated
 -- (needed to show world members by name), only the user themselves
