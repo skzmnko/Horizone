@@ -13,6 +13,19 @@
 --   001_fix_world_members_visibility.sql  <-- INTEGRATED
 -- Running this single file top to bottom produces the exact same
 -- end state as running all five of the original files in sequence.
+--
+-- NOTE ON THE FILENAME/TIMESTAMP (2025-07):
+-- Renamed from "000_full_schema.sql" to a proper
+-- <YYYYMMDDHHMMSS>_description.sql timestamp so the Supabase CLI can
+-- parse it as a valid migration version. The date is deliberately
+-- backdated (2024-01-01) so it sorts before any migration you create
+-- from now on with `supabase migration new`.
+-- This rename does NOT fix "Remote migration versions not found in
+-- local migrations directory" by itself — the remote project's
+-- schema_migrations history still references the five old file
+-- versions above, which no longer exist locally. You must also run
+-- `supabase migration repair` once to reconcile history — see
+-- MIGRATION_REPAIR.md next to this file for the exact commands.
 -- =====================================================================
 
 
