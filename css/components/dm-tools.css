@@ -1,7 +1,7 @@
 /* DM Tools Panel */
 #dm-tools-open-btn {
     position: fixed;
-    top: 60px;
+    top: calc(var(--mg-header-height) + 60px);
     left: 10px;
     z-index: 998;
     background: var(--mg-bg-panel);
@@ -44,11 +44,11 @@
 
 .dm-tools-panel {
     position: fixed;
-    top: 0;
+    top: var(--mg-header-height);
     right: 0;
     width: 380px;
     max-width: 90vw;
-    height: 100vh;
+    height: calc(100vh - var(--mg-header-height));
     background: var(--mg-bg-panel);
     backdrop-filter: blur(15px);
     border-left: 1px solid var(--mg-border);

@@ -1,6 +1,6 @@
 .mobile-top-panel {
     position: fixed;
-    top: 0;
+    top: var(--mg-header-height);
     left: 0;
     right: 0;
     height: var(--mg-mobile-top-panel-height);
@@ -133,7 +133,7 @@
 
 .mobile-search-panel {
     position: fixed;
-    top: var(--mg-mobile-top-panel-height);
+    top: calc(var(--mg-header-height) + var(--mg-mobile-top-panel-height));
     left: 0;
     right: 0;
     background: var(--mg-bg-panel);

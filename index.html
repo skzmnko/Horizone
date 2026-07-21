@@ -12,18 +12,28 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg">
 </head>
 <body class="app-loading">
-    
+
+    <header class="mg-app-header" id="app-header">
+        <a href="/" class="mg-app-header__brand" id="app-header-brand" title="Horizone">
+            <img src="/logo.svg" alt="" class="mg-app-header__logo">
+            <span class="mg-app-header__wordmark">Horizone</span>
+        </a>
+        <div class="mg-app-header__spacer"></div>
+        <div class="mg-app-header__actions">
+            <!-- Desktop Profile Button -->
+            <button id="desktop-profile-btn" class="desktop-profile-btn" title="Профиль">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
     <div class="map-background"></div>
     
     <div id="map"></div>
 
-    <!-- Desktop Profile Button -->
-    <button id="desktop-profile-btn" class="desktop-profile-btn" title="Профиль">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-        </svg>
-    </button>
 
     <!-- Profile Panel -->
     <div class="profile-panel" id="profile-panel">

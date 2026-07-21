@@ -35,19 +35,19 @@ body.app-loading #dm-tools-panel-container {
 
 #map {
     position: absolute;
-    top: 0;
+    top: var(--mg-header-height);
     bottom: 0;
     width: 100%;
-    height: 100%;
+    height: auto;
     background: var(--mg-bg-primary);
 }
 
 .map-background {
     position: fixed;
-    top: 0;
+    top: var(--mg-header-height);
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - var(--mg-header-height));
     z-index: -1;
     overflow: hidden;
     background:

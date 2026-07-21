@@ -3,7 +3,7 @@
 /* Panel Open Button */
 .panel-open-btn {
     position: fixed;
-    top: 10px;
+    top: calc(var(--mg-header-height) + 10px);
     left: 10px;
     z-index: 999;
     background: var(--mg-bg-panel);
@@ -214,7 +214,7 @@
 /* Profile Panel - Desktop */
 .profile-panel {
     position: fixed;
-    top: 0;
+    top: var(--mg-header-height);
     right: 0;
     left: 0;
     background: var(--mg-bg-panel);
@@ -316,7 +316,7 @@
 @media (max-width: 768px) {
     .profile-panel {
         position: fixed;
-        top: var(--mg-mobile-top-panel-height);
+        top: calc(var(--mg-header-height) + var(--mg-mobile-top-panel-height));
         right: 0;
         left: 0;
         background: var(--mg-bg-panel);
@@ -383,7 +383,7 @@
 @media (max-width: 480px) {
     .profile-panel {
         padding: 10px 12px;
-        top: var(--mg-mobile-top-panel-height);
+        top: calc(var(--mg-header-height) + var(--mg-mobile-top-panel-height));
     }
     
     .profile-panel-content {

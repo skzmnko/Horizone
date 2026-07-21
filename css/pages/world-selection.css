@@ -1,6 +1,9 @@
 .tp-home {
     position: fixed;
-    inset: 0;
+    top: var(--mg-header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow-y: auto;
     background:
         radial-gradient(ellipse at top, rgba(58, 48, 28, 0.35) 0%, transparent 55%),

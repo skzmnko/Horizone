@@ -6,6 +6,7 @@
 @import url('fonts.css');
 
 /* 2. Layout */
+@import url('layout/app-header.css');
 @import url('layout/control-panel.css');
 @import url('layout/detail-panel.css');
 @import url('layout/mobile-top-panel.css');

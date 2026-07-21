@@ -97,7 +97,7 @@
 
 .search-hidden-message {
     position: fixed;
-    top: 50%;
+    top: calc(50% + var(--mg-header-height) / 2);
     left: 50%;
     transform: translate(-50%, -50%);
     background: var(--mg-bg-panel);

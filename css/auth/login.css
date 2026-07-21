@@ -2,10 +2,10 @@
 
 .login-page {
     position: fixed;
-    top: 0;
+    top: var(--mg-header-height);
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - var(--mg-header-height));
     background:
         radial-gradient(
             ellipse at center,

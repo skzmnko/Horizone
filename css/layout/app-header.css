@@ -1,0 +1,144 @@
+/* =====================================================================
+   Global App Header
+   Persistent top bar shown above every screen of the app (login, world
+   selection, world control, the map itself) — analogous to the header
+   on github.com / reddit.com / dash.cloudflare.com. Today it only hosts
+   the brand and the account entry point; it exists as the future home
+   for app-level (not map-level) controls, so build features into this
+   bar rather than adding more standalone floating buttons.
+   ===================================================================== */
+
+.mg-app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--mg-header-height);
+    z-index: 15000;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    background: var(--mg-bg-panel);
+    backdrop-filter: blur(15px);
+    box-shadow: var(--mg-shadow);
+}
+
+/* Same cartouche motif used under .panel-header: a thin gold line with a
+   centred diamond, so the header reads as part of the same design system
+   instead of a bolted-on bar. */
+.mg-app-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--mg-border-light) 15%,
+        var(--mg-gold-muted) 50%,
+        var(--mg-border-light) 85%,
+        transparent 100%);
+}
+
+.mg-app-header::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    width: 6px;
+    height: 6px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--mg-gold);
+    box-shadow: var(--mg-gold-glow);
+    z-index: 1;
+}
+
+.mg-app-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--mg-text-primary);
+    text-decoration: none;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mg-app-header__logo {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(201, 162, 74, 0.35));
+}
+
+.mg-app-header__wordmark {
+    font-family: var(--mg-font-display);
+    font-weight: 500;
+    font-size: 1.05rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--mg-text-accent);
+    text-shadow: 0 0 10px rgba(26, 127, 127, 0.3);
+    white-space: nowrap;
+}
+
+/* Reserved space for future global navigation / actions (worlds switcher,
+   notifications, search, etc.) — intentionally empty for now. */
+.mg-app-header__spacer {
+    flex: 1;
+}
+
+.mg-app-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* The account button now lives inside the header instead of floating in
+   the top-right corner on its own — same element/id/behaviour, only its
+   position changed, so it no longer needs its own fixed offset. */
+.mg-app-header__actions .desktop-profile-btn {
+    position: static;
+    top: auto;
+    right: auto;
+    z-index: auto;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --mg-header-height: 48px;
+    }
+
+    .mg-app-header {
+        padding: 0 14px;
+        gap: 12px;
+    }
+
+    .mg-app-header__wordmark {
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+    }
+
+    .mg-app-header__logo {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* The mobile toolbar already has its own profile button one bar
+       down — no need to show a second account entry point up here. */
+    .mg-app-header__actions {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --mg-header-height: 44px;
+    }
+
+    .mg-app-header__wordmark {
+        display: none;
+    }
+}
