@@ -43,5 +43,52 @@ export default {
     // Info messages
     infoEmailSent: 'If an account with that email exists, a password reset link has been sent.',
     infoRegistrationSuccess: 'Almost done! We sent an email to {email}, click the link to confirm your registration, then sign in.',
+  },
+  worldSelection: {
+    logoutButton: 'Log out',
+    loggingOut: 'Logging out...',
+    worldsTitle: 'Worlds',
+    createWorldButton: '+ Create world',
+    deleteWorldButton: 'Delete world',
+    searchPlaceholder: 'Search...',
+    comingSoon: 'Coming soon',
+    sortAZ: 'A-Z',
+    sortLatest: 'Latest',
+    joinByCodeLink: 'Have an invite code?',
+    emptyWorlds: "You don't have any worlds yet — create your first one above",
+    publicWorldsTitle: '🌍 Public worlds',
+    deleteAccountButton: 'Delete my account permanently',
+    roleDm: '🎲 Master',
+    roleObserver: '🔎 Observer',
+    publicBadge: '🌍 Public',
+    changeCoverTitle: 'Change cover',
+
+    modalCancel: 'Cancel',
+
+    createWorldTitle: 'New world name',
+    createWorldPlaceholder: 'e.g. Oraska',
+    createWorldConfirm: 'Create',
+
+    deleteAccountTitle: 'Delete account?',
+    deleteAccountMessage: 'This will delete your account, all your worlds (with all maps and locations), and remove you from every other world. This is <strong>irreversible</strong>.',
+    deleteAccountConfirm: 'Delete permanently',
+
+    deleteWorldsTitle: 'Delete worlds?',
+    deleteWorldsMessage: 'Delete the selected worlds (<strong>{names}</strong>) along with all their maps and locations? This is irreversible.',
+    deleteWorldsConfirm: 'Delete',
+
+    joinWorldTitle: 'Invite code',
+    joinCodePlaceholder: 'e.g. AB3D9F2K',
+    joinNamePlaceholder: 'Character name (optional)',
+    joinConfirm: 'Join',
+
+    publicWorldClickHint: "This is a public world — ask the world's master for an invite code to join.",
+
+    errorDeleteAccount: 'Failed to delete account: {message}',
+    errorCreateWorld: 'Failed to create world: {message}',
+    errorJoinInvalidCode: 'Invalid or expired invite code',
+    errorDeleteWorlds: 'Failed to delete: {message}',
+    errorUploadCover: 'Failed to upload cover: {message}',
+    errorOpenWorld: 'Failed to open world: {message}',
   }
 };

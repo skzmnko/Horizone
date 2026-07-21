@@ -1,13 +1,13 @@
 export default {
   common: {
-    appName: 'Trace & Place',
+    appName: 'Horizone',
     subtitle: 'Интерактивные карты',
     back: 'Назад',
     cancel: 'Отмена',
     confirm: 'Подтвердить',
   },
   login: {
-    title: 'Trace & Place',
+    title: 'Horizone',
     subtitle: 'Интерактивные карты',
     emailLabel: 'Email',
     emailPlaceholder: 'you@example.com',
@@ -43,5 +43,52 @@ export default {
     // Info messages
     infoEmailSent: 'Если аккаунт с таким email существует, письмо со ссылкой для сброса пароля уже отправлено.',
     infoRegistrationSuccess: 'Почти готово! Мы отправили письмо на {email} — перейди по ссылке из письма, чтобы подтвердить регистрацию, и затем войди.',
+  },
+  worldSelection: {
+    logoutButton: 'Выйти',
+    loggingOut: 'Выход...',
+    worldsTitle: 'Миры',
+    createWorldButton: '+ Создать мир',
+    deleteWorldButton: 'Удалить мир',
+    searchPlaceholder: 'Поиск...',
+    comingSoon: 'Скоро',
+    sortAZ: 'А-Я',
+    sortLatest: 'Новые',
+    joinByCodeLink: 'Есть код приглашения?',
+    emptyWorlds: 'У тебя пока нет ни одного мира — создай первый выше',
+    publicWorldsTitle: '🌍 Публичные миры',
+    deleteAccountButton: 'Удалить мой аккаунт безвозвратно',
+    roleDm: '🎲 Мастер',
+    roleObserver: '🔎 Наблюдатель',
+    publicBadge: '🌍 Публичный',
+    changeCoverTitle: 'Изменить обложку',
+
+    modalCancel: 'Отмена',
+
+    createWorldTitle: 'Название нового мира',
+    createWorldPlaceholder: 'Например, Ораска',
+    createWorldConfirm: 'Создать',
+
+    deleteAccountTitle: 'Удалить аккаунт?',
+    deleteAccountMessage: 'Это удалит твой аккаунт, все твои миры (со всеми картами и локациями) и выход из всех чужих миров. Это <strong>необратимо</strong>.',
+    deleteAccountConfirm: 'Удалить навсегда',
+
+    deleteWorldsTitle: 'Удалить миры?',
+    deleteWorldsMessage: 'Удалить выбранные миры (<strong>{names}</strong>) со всеми картами и локациями? Это необратимо.',
+    deleteWorldsConfirm: 'Удалить',
+
+    joinWorldTitle: 'Код приглашения',
+    joinCodePlaceholder: 'Например, AB3D9F2K',
+    joinNamePlaceholder: 'Имя персонажа (необязательно)',
+    joinConfirm: 'Войти',
+
+    publicWorldClickHint: 'Это публичный мир — чтобы присоединиться, попроси код приглашения у мастера этого мира.',
+
+    errorDeleteAccount: 'Не удалось удалить аккаунт: {message}',
+    errorCreateWorld: 'Не удалось создать мир: {message}',
+    errorJoinInvalidCode: 'Неверный или истёкший код приглашения',
+    errorDeleteWorlds: 'Не удалось удалить: {message}',
+    errorUploadCover: 'Не удалось загрузить обложку: {message}',
+    errorOpenWorld: 'Не удалось открыть мир: {message}',
   }
 };

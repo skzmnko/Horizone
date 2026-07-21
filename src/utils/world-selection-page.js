@@ -1,6 +1,7 @@
 import WorldsService from '../services/worlds-service.js';
 import WorldCoverService from '../services/world-cover-service.js';
 import AuthService from '../services/auth-service.js';
+import { t } from '../services/i18n.js';
 
 class WorldSelectionPage {
     constructor() {
@@ -48,28 +49,28 @@ class WorldSelectionPage {
 
         const gridHtml = this.worlds.length > 0
             ? `<div class="tp-grid">${this.worlds.map(w => this.renderCard(w)).join('')}</div>`
-            : `<div class="tp-empty">У тебя пока нет ни одного мира — создай первый выше</div>`;
+            : `<div class="tp-empty">${t('worldSelection.emptyWorlds')}</div>`;
 
         const publicSectionHtml = this.publicWorlds.length > 0 ? `
-            <div class="tp-section-title">🌍 Публичные миры</div>
+            <div class="tp-section-title">${t('worldSelection.publicWorldsTitle')}</div>
             <div class="tp-grid">${this.publicWorlds.map(w => this.renderPublicCard(w)).join('')}</div>
         ` : '';
 
         this.container.innerHTML = `
             <div class="tp-header">
-                <button class="tp-logout-btn" id="tp-logout-btn">Выйти</button>
+                <button class="tp-logout-btn" id="tp-logout-btn">${t('worldSelection.logoutButton')}</button>
                 <img src="/logo.svg" alt="Horizone" class="tp-logo-img">
             </div>
 
-            <div class="tp-section-title">Worlds</div>
+            <div class="tp-section-title">${t('worldSelection.worldsTitle')}</div>
 
             <div class="tp-toolbar">
-                <button class="tp-btn tp-btn-primary" id="tp-create-world-btn">+ Создать мир</button>
-                <button class="tp-btn tp-btn-danger" id="tp-delete-world-btn" disabled>Удалить мир</button>
-                <input type="text" class="tp-search-input" placeholder="Search..." disabled title="Скоро">
-                <button class="tp-sort-btn" title="Скоро">A-Z</button>
-                <button class="tp-sort-btn" title="Скоро">Latest</button>
-                <button class="tp-join-link" id="tp-join-link">Есть код приглашения?</button>
+                <button class="tp-btn tp-btn-primary" id="tp-create-world-btn">${t('worldSelection.createWorldButton')}</button>
+                <button class="tp-btn tp-btn-danger" id="tp-delete-world-btn" disabled>${t('worldSelection.deleteWorldButton')}</button>
+                <input type="text" class="tp-search-input" placeholder="${t('worldSelection.searchPlaceholder')}" disabled title="${t('worldSelection.comingSoon')}">
+                <button class="tp-sort-btn" title="${t('worldSelection.comingSoon')}">${t('worldSelection.sortAZ')}</button>
+                <button class="tp-sort-btn" title="${t('worldSelection.comingSoon')}">${t('worldSelection.sortLatest')}</button>
+                <button class="tp-join-link" id="tp-join-link">${t('worldSelection.joinByCodeLink')}</button>
             </div>
 
             ${gridHtml}
@@ -77,7 +78,7 @@ class WorldSelectionPage {
             ${publicSectionHtml}
 
             <div style="text-align:center; margin-top:32px;">
-                <button class="tp-danger-link" id="tp-delete-account-btn">Удалить мой аккаунт безвозвратно</button>
+                <button class="tp-danger-link" id="tp-delete-account-btn">${t('worldSelection.deleteAccountButton')}</button>
             </div>
 
             <div id="tp-error" class="error-message hidden tp-error-box"></div>
@@ -105,20 +106,20 @@ class WorldSelectionPage {
                         <input type="checkbox" class="tp-card-checkbox" data-world-id="${world.id}" ${isSelected ? 'checked' : ''}>
                     </label>
                     ${isDM ? `
-                        <button class="tp-card-cover-btn" data-world-id="${world.id}" title="Изменить обложку">🖼</button>
+                        <button class="tp-card-cover-btn" data-world-id="${world.id}" title="${t('worldSelection.changeCoverTitle')}">🖼</button>
                         <input type="file" accept="image/*" class="tp-cover-input" data-world-id="${world.id}">
                     ` : ''}
                 </div>
                 <div class="tp-card-name">
                     ${this.escapeHtml(world.name)}
-                    <span class="tp-card-role">${isDM ? '🎲 Мастер' : '🔎 Наблюдатель'}${world.isPublic ? ' · 🌍 Публичный' : ''}</span>
+                    <span class="tp-card-role">${isDM ? t('worldSelection.roleDm') : t('worldSelection.roleObserver')}${world.isPublic ? ' · ' + t('worldSelection.publicBadge') : ''}</span>
                 </div>
             </div>
         `;
     }
 
-    // Карточка публичного мира, участником которого текущий пользователь
-    // не является — без чекбокса выбора и без смены обложки (не его мир)
+    // Public world card for a world the current user is not a member of —
+    // no selection checkbox and no cover upload (not their world)
     renderPublicCard(world) {
         const coverUrl = WorldCoverService.getPublicUrl(world.coverImagePath);
 
@@ -135,7 +136,7 @@ class WorldSelectionPage {
                 </div>
                 <div class="tp-card-name">
                     ${this.escapeHtml(world.name)}
-                    <span class="tp-card-role">🌍 Публичный</span>
+                    <span class="tp-card-role">${t('worldSelection.publicBadge')}</span>
                 </div>
             </div>
         `;
@@ -150,8 +151,8 @@ class WorldSelectionPage {
         return `linear-gradient(135deg, hsl(${hue}, 40%, 26%), hsl(${(hue + 40) % 360}, 35%, 14%))`;
     }
 
-    // Стилизованная замена window.prompt() — возвращает Promise<string|null>
-    showPromptModal({ title, placeholder = '', confirmLabel = 'ОК' }) {
+    // Styled replacement for window.prompt() — returns Promise<string|null>
+    showPromptModal({ title, placeholder = '', confirmLabel }) {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
             overlay.className = 'tp-modal-overlay';
@@ -160,7 +161,7 @@ class WorldSelectionPage {
                     <div class="tp-modal-title">${this.escapeHtml(title)}</div>
                     <input type="text" class="tp-modal-input" id="tp-modal-input" placeholder="${this.escapeHtml(placeholder)}">
                     <div class="tp-modal-actions">
-                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn" id="tp-modal-cancel">${t('worldSelection.modalCancel')}</button>
                         <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
                     </div>
                 </div>
@@ -187,8 +188,8 @@ class WorldSelectionPage {
         });
     }
 
-    // Стилизованная замена window.confirm() — возвращает Promise<boolean>
-    showConfirmModal({ title, message, confirmLabel = 'Удалить', danger = true }) {
+    // Styled replacement for window.confirm() — returns Promise<boolean>
+    showConfirmModal({ title, message, confirmLabel, danger = true }) {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
             overlay.className = 'tp-modal-overlay';
@@ -197,7 +198,7 @@ class WorldSelectionPage {
                     <div class="tp-modal-title">${this.escapeHtml(title)}</div>
                     <div class="tp-modal-message">${message}</div>
                     <div class="tp-modal-actions">
-                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn" id="tp-modal-cancel">${t('worldSelection.modalCancel')}</button>
                         <button class="tp-btn ${danger ? 'tp-btn-danger' : 'tp-btn-primary'}" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
                     </div>
                 </div>
@@ -217,19 +218,19 @@ class WorldSelectionPage {
         });
     }
 
-    // Отдельная модалка для входа по коду — код + необязательное имя персонажа
+    // Separate modal for joining by invite code — code + optional character name
     showJoinWorldModal() {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
             overlay.className = 'tp-modal-overlay';
             overlay.innerHTML = `
                 <div class="tp-modal">
-                    <div class="tp-modal-title">Код приглашения</div>
-                    <input type="text" class="tp-modal-input" id="tp-join-code" placeholder="Например, AB3D9F2K">
-                    <input type="text" class="tp-modal-input" id="tp-join-name" placeholder="Имя персонажа (необязательно)">
+                    <div class="tp-modal-title">${t('worldSelection.joinWorldTitle')}</div>
+                    <input type="text" class="tp-modal-input" id="tp-join-code" placeholder="${t('worldSelection.joinCodePlaceholder')}">
+                    <input type="text" class="tp-modal-input" id="tp-join-name" placeholder="${t('worldSelection.joinNamePlaceholder')}">
                     <div class="tp-modal-actions">
-                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
-                        <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">Войти</button>
+                        <button class="tp-btn" id="tp-modal-cancel">${t('worldSelection.modalCancel')}</button>
+                        <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">${t('worldSelection.joinConfirm')}</button>
                     </div>
                 </div>
             `;
@@ -268,7 +269,7 @@ class WorldSelectionPage {
         document.getElementById('tp-logout-btn').addEventListener('click', async (e) => {
             const btn = e.currentTarget;
             btn.disabled = true;
-            btn.textContent = 'Выход...';
+            btn.textContent = t('worldSelection.loggingOut');
             try {
                 await AuthService.logout();
             } catch (err) {
@@ -280,9 +281,9 @@ class WorldSelectionPage {
 
         document.getElementById('tp-delete-account-btn').addEventListener('click', async () => {
             const confirmed = await this.showConfirmModal({
-                title: 'Удалить аккаунт?',
-                message: 'Это удалит твой аккаунт, все твои миры (со всеми картами и локациями) и выход из всех чужих миров. Это <strong>необратимо</strong>.',
-                confirmLabel: 'Удалить навсегда'
+                title: t('worldSelection.deleteAccountTitle'),
+                message: t('worldSelection.deleteAccountMessage'),
+                confirmLabel: t('worldSelection.deleteAccountConfirm')
             });
             if (!confirmed) return;
 
@@ -294,15 +295,15 @@ class WorldSelectionPage {
                     this.showError(result.error);
                 }
             } catch (err) {
-                this.showError('Не удалось удалить аккаунт: ' + err.message);
+                this.showError(t('worldSelection.errorDeleteAccount', { message: err.message }));
             }
         });
 
         document.getElementById('tp-create-world-btn').addEventListener('click', async () => {
             const name = await this.showPromptModal({
-                title: 'Название нового мира',
-                placeholder: 'Например, Ораска',
-                confirmLabel: 'Создать'
+                title: t('worldSelection.createWorldTitle'),
+                placeholder: t('worldSelection.createWorldPlaceholder'),
+                confirmLabel: t('worldSelection.createWorldConfirm')
             });
             if (!name) return;
 
@@ -310,7 +311,7 @@ class WorldSelectionPage {
                 await WorldsService.createWorld(name);
                 await this.loadAndRender();
             } catch (err) {
-                this.showError('Не удалось создать мир: ' + err.message);
+                this.showError(t('worldSelection.errorCreateWorld', { message: err.message }));
             }
         });
 
@@ -322,7 +323,7 @@ class WorldSelectionPage {
                 await WorldsService.joinWorldByInviteCode(result.code, result.characterName);
                 await this.loadAndRender();
             } catch (err) {
-                this.showError('Неверный или истёкший код приглашения');
+                this.showError(t('worldSelection.errorJoinInvalidCode'));
             }
         });
 
@@ -335,9 +336,9 @@ class WorldSelectionPage {
                 .join(', ');
 
             const confirmed = await this.showConfirmModal({
-                title: 'Удалить миры?',
-                message: `Удалить выбранные миры (<strong>${names}</strong>) со всеми картами и локациями? Это необратимо.`,
-                confirmLabel: 'Удалить'
+                title: t('worldSelection.deleteWorldsTitle'),
+                message: t('worldSelection.deleteWorldsMessage', { names }),
+                confirmLabel: t('worldSelection.deleteWorldsConfirm')
             });
             if (!confirmed) return;
 
@@ -347,7 +348,7 @@ class WorldSelectionPage {
                 }
                 await this.loadAndRender();
             } catch (err) {
-                this.showError('Не удалось удалить: ' + err.message);
+                this.showError(t('worldSelection.errorDeleteWorlds', { message: err.message }));
             }
         });
 
@@ -389,7 +390,7 @@ class WorldSelectionPage {
                     await WorldCoverService.uploadCover(file, worldId);
                     await this.loadAndRender();
                 } catch (err) {
-                    this.showError('Не удалось загрузить обложку: ' + err.message);
+                    this.showError(t('worldSelection.errorUploadCover', { message: err.message }));
                 }
             });
         });
@@ -402,7 +403,7 @@ class WorldSelectionPage {
 
         this.container.querySelectorAll('.tp-card-public').forEach(card => {
             card.addEventListener('click', () => {
-                this.showError('Это публичный мир — чтобы присоединиться, попроси код приглашения у мастера этого мира.');
+                this.showError(t('worldSelection.publicWorldClickHint'));
             });
         });
     }
@@ -417,7 +418,7 @@ class WorldSelectionPage {
                 this.onWorldSelected({ worldId, mapId: map ? map.id : null });
             }
         } catch (err) {
-            this.showError('Не удалось открыть мир: ' + err.message);
+            this.showError(t('worldSelection.errorOpenWorld', { message: err.message }));
         }
     }
 
