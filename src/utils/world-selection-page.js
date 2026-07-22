@@ -1,6 +1,5 @@
 import WorldsService from '../services/worlds-service.js';
 import WorldCoverService from '../services/world-cover-service.js';
-import AuthService from '../services/auth-service.js';
 import { t } from '../services/i18n.js';
 
 class WorldSelectionPage {
@@ -75,10 +74,6 @@ class WorldSelectionPage {
             ${gridHtml}
 
             ${publicSectionHtml}
-
-            <div style="text-align:center; margin-top:32px;">
-                <button class="tp-danger-link" id="tp-delete-account-btn">${t('worldSelection.deleteAccountButton')}</button>
-            </div>
 
             <div id="tp-error" class="error-message hidden tp-error-box"></div>
         `;
@@ -265,26 +260,6 @@ class WorldSelectionPage {
     }
 
     bindEvents() {
-        document.getElementById('tp-delete-account-btn').addEventListener('click', async () => {
-            const confirmed = await this.showConfirmModal({
-                title: t('worldSelection.deleteAccountTitle'),
-                message: t('worldSelection.deleteAccountMessage'),
-                confirmLabel: t('worldSelection.deleteAccountConfirm')
-            });
-            if (!confirmed) return;
-
-            try {
-                const result = await AuthService.deleteMyAccount();
-                if (result.success) {
-                    window.location.reload();
-                } else {
-                    this.showError(result.error);
-                }
-            } catch (err) {
-                this.showError(t('worldSelection.errorDeleteAccount', { message: err.message }));
-            }
-        });
-
         document.getElementById('tp-create-world-btn').addEventListener('click', async () => {
             const name = await this.showPromptModal({
                 title: t('worldSelection.createWorldTitle'),

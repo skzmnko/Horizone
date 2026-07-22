@@ -352,19 +352,6 @@
     font-size: 13px;
 }
 
-.tp-danger-link {
-    background: none;
-    border: none;
-    color: var(--mg-text-muted);
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.tp-danger-link:hover {
-    color: #ff8f8f;
-}
-
 .tp-error-box {
     max-width: 1100px;
     margin: 16px auto 0;

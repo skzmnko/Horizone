@@ -78,6 +78,8 @@ class AccountSettingsPage {
                     <button class="tp-btn tp-btn-danger" id="as-delete-request-btn">${t('accountSettings.deleteRequestButton')}</button>
                 </div>
             </div>
+
+            <div id="as-error" class="error-message hidden tp-error-box"></div>
         `;
 
         document.body.appendChild(this.container);
@@ -107,8 +109,27 @@ class AccountSettingsPage {
             });
         });
 
-        // Note: the "Danger zone" button intentionally has no click handler
-        // yet — it's a placeholder until account deletion is wired up here.
+        // Danger zone — same "Delete account?" confirmation used to live
+        // on world-selection-page.js, now reachable from here instead.
+        document.getElementById('as-delete-request-btn').addEventListener('click', async () => {
+            const confirmed = await this.showConfirmModal({
+                title: t('worldSelection.deleteAccountTitle'),
+                message: t('worldSelection.deleteAccountMessage'),
+                confirmLabel: t('worldSelection.deleteAccountConfirm')
+            });
+            if (!confirmed) return;
+
+            try {
+                const result = await AuthService.deleteMyAccount();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    this.showError(result.error);
+                }
+            } catch (err) {
+                this.showError(t('worldSelection.errorDeleteAccount', { message: err.message }));
+            }
+        });
 
         saveBtn.addEventListener('click', async () => {
             errorEl.classList.add('hidden');
@@ -132,6 +153,45 @@ class AccountSettingsPage {
 
             updateSaveState();
         });
+    }
+
+    // Styled replacement for window.confirm() — same pattern as
+    // world-selection-page.js's modal, so "Delete account?" looks and
+    // behaves identically wherever it's triggered from.
+    showConfirmModal({ title, message, confirmLabel, danger = true }) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tp-modal-overlay';
+            overlay.innerHTML = `
+                <div class="tp-modal">
+                    <div class="tp-modal-title">${this.escapeHtml(title)}</div>
+                    <div class="tp-modal-message">${message}</div>
+                    <div class="tp-modal-actions">
+                        <button class="tp-btn" id="as-modal-cancel">${t('worldSelection.modalCancel')}</button>
+                        <button class="tp-btn ${danger ? 'tp-btn-danger' : 'tp-btn-primary'}" id="as-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const close = (value) => {
+                overlay.remove();
+                resolve(value);
+            };
+
+            overlay.querySelector('#as-modal-cancel').addEventListener('click', () => close(false));
+            overlay.querySelector('#as-modal-confirm').addEventListener('click', () => close(true));
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close(false);
+            });
+        });
+    }
+
+    showError(message) {
+        const el = document.getElementById('as-error');
+        if (!el) return;
+        el.textContent = message;
+        el.classList.remove('hidden');
     }
 
     getErrorMessage(errorCode) {
