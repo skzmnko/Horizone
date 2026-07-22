@@ -107,48 +107,71 @@
     }
 }
 
-/* Desktop Profile Button */
+/* Profile menu trigger — circular avatar button living inside the header */
 .desktop-profile-btn {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 999;
-    background: var(--mg-bg-panel);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--mg-border);
-    border-radius: var(--mg-radius-lg);
-    color: var(--mg-text-secondary);
-    padding: 10px 12px;
+    background: none;
+    border: none;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
     cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     transition: all 0.2s ease;
-    box-shadow: var(--mg-shadow);
+}
+
+.desktop-profile-btn:hover .mg-avatar {
+    box-shadow: var(--mg-glow), 0 0 0 2px var(--mg-accent-muted);
+}
+
+.desktop-profile-btn.active .mg-avatar {
+    box-shadow: var(--mg-glow), 0 0 0 2px var(--mg-accent);
+}
+
+/* Avatar medallion — shows the user's initial once known, falls back to a
+   generic icon before auth resolves. Reused at a larger size in the menu
+   header. */
+.mg-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--mg-accent) 0%, #123f3f 100%);
+    color: var(--mg-text-primary);
+    font-family: var(--mg-font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid var(--mg-border-light);
+    box-shadow: var(--mg-shadow);
+    transition: box-shadow 0.2s ease;
 }
 
-.desktop-profile-btn:hover {
-    background: var(--mg-hover);
-    border-color: var(--mg-accent-muted);
-    color: var(--mg-text-accent);
-    box-shadow: var(--mg-glow);
-}
-
-.desktop-profile-btn.active {
-    background: var(--mg-accent-light);
-    border-color: var(--mg-accent);
-    color: var(--mg-text-accent);
-    box-shadow: var(--mg-glow);
-}
-
-.desktop-profile-btn svg {
-    width: 22px;
-    height: 22px;
+.mg-avatar svg {
+    width: 18px;
+    height: 18px;
     stroke: currentColor;
     fill: none;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+.mg-avatar--lg {
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+    border-color: var(--mg-accent-muted);
+}
+
+.mg-avatar--lg svg {
+    width: 24px;
+    height: 24px;
 }
 
 /* Mobile Profile Button */
@@ -204,216 +227,136 @@
     }
 }
 
-/* Hide desktop profile button on mobile */
+/* Hide desktop profile button on mobile (mobile has its own trigger,
+   further down in the mobile top panel) */
 @media (max-width: 768px) {
     .desktop-profile-btn {
         display: none !important;
     }
 }
 
-/* Profile Panel - Desktop */
+/* Profile menu — a small anchored dropdown (à la Reddit's user drawer),
+   not a full-width bar. Triggered from either profile button; both live
+   in the top chrome, so a right-anchored card works for both. */
 .profile-panel {
     position: fixed;
-    top: var(--mg-header-height);
-    right: 0;
-    left: 0;
+    top: calc(var(--mg-header-height) + 8px);
+    right: 16px;
+    width: 270px;
     background: var(--mg-bg-panel);
     backdrop-filter: blur(15px);
-    border-bottom: 1px solid var(--mg-border);
+    border: 1px solid var(--mg-border);
+    border-radius: var(--mg-radius-lg);
     box-shadow: var(--mg-shadow-lg);
-    z-index: 2000;
-    transform: translateY(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 16px 24px;
+    z-index: 16000;
+    padding: 16px;
     display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    will-change: transform;
+    flex-direction: column;
+    gap: 14px;
+    transform-origin: top right;
+    transform: scale(0.94) translateY(-6px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.15s ease,
+        visibility 0.15s;
 }
 
 .profile-panel.open {
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
-.profile-panel-content {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    justify-content: flex-end;
-}
-
-.profile-user-info {
+.profile-panel-header {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.profile-avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--mg-accent-light);
-    border: 2px solid var(--mg-accent-muted);
-    color: var(--mg-text-accent);
-}
-
-.profile-avatar svg {
-    width: 28px;
-    height: 28px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 1.5;
 }
 
 .profile-user-details {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .profile-username {
     color: var(--mg-text-primary);
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .profile-role {
     color: var(--mg-text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
-.profile-logout-btn {
-    padding: 10px 24px;
-    background: rgba(220, 53, 69, 0.15);
-    border: 1px solid rgba(220, 53, 69, 0.3);
-    border-radius: var(--mg-radius-lg);
-    color: #ff6b6b;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.profile-menu-divider {
+    height: 1px;
+    background: var(--mg-border);
+    margin: 0 -16px;
+}
+
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 -16px -4px;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    color: var(--mg-text-secondary);
+    font-size: 0.88rem;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-.profile-logout-btn:hover {
-    background: rgba(220, 53, 69, 0.25);
-    border-color: rgba(220, 53, 69, 0.5);
-    box-shadow: 0 0 20px rgba(220, 53, 69, 0.15);
-    transform: scale(1.02);
+.profile-menu-item svg {
+    flex-shrink: 0;
 }
 
-.profile-logout-btn:active {
-    transform: scale(0.98);
+.profile-menu-item:hover {
+    background: var(--mg-hover);
+    color: var(--mg-text-primary);
 }
 
-/* Profile Panel - Mobile */
+.profile-menu-item--danger {
+    color: #ff8f8f;
+}
+
+.profile-menu-item--danger:hover {
+    background: rgba(220, 53, 69, 0.15);
+    color: #ff6b6b;
+}
+
+.profile-menu-item:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: none !important;
+}
+
+/* Profile menu — mobile: same dropdown card, anchored under the mobile
+   top panel instead of the header. */
 @media (max-width: 768px) {
     .profile-panel {
-        position: fixed;
-        top: calc(var(--mg-header-height) + var(--mg-mobile-top-panel-height));
-        right: 0;
-        left: 0;
-        background: var(--mg-bg-panel);
-        backdrop-filter: blur(15px);
-        border-bottom: 1px solid var(--mg-border);
-        box-shadow: var(--mg-shadow-lg);
-        z-index: 1000;
-        transform: translateY(-100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        will-change: transform;
-        visibility: visible;
-        opacity: 1;
-    }
-    
-    .profile-panel.open {
-        transform: translateY(0);
-    }
-    
-    .profile-panel:not(.open) {
-        transform: translateY(-100%);
-    }
-    
-    .profile-panel-content {
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 12px;
-        width: 100%;
-    }
-    
-    .profile-user-info {
-        gap: 10px;
-    }
-    
-    .profile-avatar {
-        width: 40px;
-        height: 40px;
-        flex-shrink: 0;
-    }
-    
-    .profile-avatar svg {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .profile-username {
-        font-size: 0.9rem;
-    }
-    
-    .profile-role {
-        font-size: 0.75rem;
-    }
-    
-    .profile-logout-btn {
-        padding: 8px 16px;
-        font-size: 0.85rem;
-        flex-shrink: 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .profile-panel {
-        padding: 10px 12px;
-        top: calc(var(--mg-header-height) + var(--mg-mobile-top-panel-height));
-    }
-    
-    .profile-panel-content {
-        gap: 8px;
-    }
-    
-    .profile-user-info {
-        gap: 8px;
-    }
-    
-    .profile-avatar {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .profile-avatar svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .profile-username {
-        font-size: 0.8rem;
-    }
-    
-    .profile-role {
-        font-size: 0.7rem;
-    }
-    
-    .profile-logout-btn {
-        padding: 6px 12px;
-        font-size: 0.75rem;
+        top: calc(var(--mg-header-height) + var(--mg-mobile-top-panel-height) + 8px);
+        right: 12px;
+        width: min(270px, calc(100vw - 24px));
     }
 }

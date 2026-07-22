@@ -69,6 +69,7 @@ class Application {
 
             setLanguage('en');
             this.uiService = new UIService();
+            this.uiService.initializeProfileMenu();
 
             let recoveryHandled = false;
             AuthService.onAuthStateChange((event) => {
@@ -88,6 +89,9 @@ class Application {
                 return;
             }
 
+            document.body.classList.add('user-authenticated');
+            this.uiService.refreshProfileUser();
+
             const restoredWorldId = getWorldUrlParam();
             if (restoredWorldId) {
                 await this.enterWorld(restoredWorldId);
@@ -104,6 +108,8 @@ class Application {
     showResetPasswordPage() {
         const resetPage = new ResetPasswordPage();
         resetPage.initialize(() => {
+            document.body.classList.add('user-authenticated');
+            this.uiService.refreshProfileUser();
             this.showWorldSelectionPage();
         });
     }
@@ -112,6 +118,9 @@ class Application {
         this.loginPage = new LoginPage();
 
         this.loginPage.initialize(() => {
+            document.body.classList.add('user-authenticated');
+            this.uiService.refreshProfileUser();
+
             const restoredWorldId = getWorldUrlParam();
             if (restoredWorldId) {
                 this.enterWorld(restoredWorldId);
@@ -133,6 +142,7 @@ class Application {
     async enterWorld(worldId) {
         const role = await WorldsService.getMyRoleInWorld(worldId);
         AuthService.setCurrentWorldRole(role);
+        this.uiService.refreshProfileRole();
 
         this.currentWorldId = worldId;
 

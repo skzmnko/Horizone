@@ -1,5 +1,6 @@
 import AuthService from './auth-service.js';
 import SearchService from './search-service.js';
+import { t } from './i18n.js';
 
 class UIService {
     constructor() {
@@ -23,6 +24,8 @@ class UIService {
         this.profileUsername = null;
         this.profileRole = null;
         this.profileLogoutBtn = null;
+        this.desktopProfileAvatar = null;
+        this.profileAvatar = null;
         this.isProfileOpen = false;
     }
 
@@ -38,14 +41,7 @@ class UIService {
         this.mobileTopPanel = document.getElementById('mobile-top-panel');
         this.searchInput = document.getElementById('search');
         this.searchResults = document.getElementById('search-results');
-        
-        this.desktopProfileBtn = document.getElementById('desktop-profile-btn');
-        this.mobileProfileBtn = document.getElementById('mobile-profile-btn');
-        this.profilePanel = document.getElementById('profile-panel');
-        this.profileUsername = document.getElementById('profile-username');
-        this.profileRole = document.getElementById('profile-role');
-        this.profileLogoutBtn = document.getElementById('profile-logout-btn');
-        
+
         this.isMobile = window.innerWidth <= 768;
         
         if (this.panelContainer) {
@@ -88,7 +84,8 @@ class UIService {
         this.setupEventListeners();
         this.bindControlButtons();
         this.setupSearchResultsPosition();
-        this.setupProfilePanel();
+        this.initializeProfileMenu();
+        this.refreshProfileRole();
         
         window.addEventListener('resize', () => {
             const wasMobile = this.isMobile;
@@ -133,19 +130,50 @@ class UIService {
         return this;
     }
 
-    setupProfilePanel() {
-        const user = AuthService.getCurrentUser();
-        if (this.profileUsername && user) {
-            this.profileUsername.textContent = user.displayName || user.username;
-        }
-        if (this.profileRole && user) {
-            this.profileRole.textContent = AuthService.isDM() ? 'Мастер' : 'Игрок';
-        }
+    /* Applies translations to any static index.html markup tagged with
+       data-i18n (textContent) / data-i18n-title (title attribute) via the
+       shared localization service — the same t() used by the login and
+       world-selection pages. */
+    applyStaticI18n() {
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+            el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            el.setAttribute('title', t(el.dataset.i18nTitle));
+        });
+    }
+
+    /* Wires up the header/mobile profile menu: avatar, username, logout,
+       and the open/close toggle. Lives outside the map-specific
+       initialize() so the menu already works on login/world-selection/
+       world-control, not just once a world has actually loaded — it only
+       needs an authenticated user, not a loaded map. Safe to call more
+       than once (e.g. from both app boot and, defensively, from
+       initialize()); real setup runs only the first time. */
+    initializeProfileMenu() {
+        if (this._profileMenuInitialized) return;
+        this._profileMenuInitialized = true;
+
+        this.desktopProfileBtn = document.getElementById('desktop-profile-btn');
+        this.mobileProfileBtn = document.getElementById('mobile-profile-btn');
+        this.profilePanel = document.getElementById('profile-panel');
+        this.profileUsername = document.getElementById('profile-username');
+        this.profileRole = document.getElementById('profile-role');
+        this.profileLogoutBtn = document.getElementById('profile-logout-btn');
+        this.profileLogoutBtnLabel = document.getElementById('profile-logout-btn-label');
+        this.desktopProfileAvatar = document.getElementById('desktop-profile-avatar');
+        this.profileAvatar = document.getElementById('profile-avatar');
+
+        this.applyStaticI18n();
+        this.refreshProfileUser();
+        this.refreshProfileRole();
 
         if (this.profileLogoutBtn) {
             this.profileLogoutBtn.addEventListener('click', async () => {
                 this.profileLogoutBtn.disabled = true;
-                this.profileLogoutBtn.textContent = 'Выход...';
+                if (this.profileLogoutBtnLabel) {
+                    this.profileLogoutBtnLabel.textContent = t('header.loggingOut');
+                }
                 try {
                     await AuthService.logout();
                 } catch (e) {
@@ -187,6 +215,39 @@ class UIService {
         });
     }
 
+    /* Populates username/avatar once AuthService actually has a user —
+       call after auth resolves (initializeProfileMenu() may run before
+       that, at boot, when there's nothing to show yet). */
+    refreshProfileUser() {
+        const user = AuthService.getCurrentUser();
+        if (!user) return;
+        if (this.profileUsername) {
+            this.profileUsername.textContent = user.displayName || user.username;
+        }
+        const name = user.displayName || user.username || '?';
+        const initial = name.trim().charAt(0).toUpperCase() || '?';
+        if (this.desktopProfileAvatar) {
+            this.desktopProfileAvatar.textContent = initial;
+        }
+        if (this.profileAvatar) {
+            this.profileAvatar.textContent = initial;
+        }
+    }
+
+    /* Role ("Master"/"Player") only makes sense once a specific world is
+       active — hidden until then. Call again after entering a world to
+       reveal it. */
+    refreshProfileRole() {
+        if (!this.profileRole) return;
+        const role = AuthService.getCurrentWorldRole();
+        if (!role) {
+            this.profileRole.style.display = 'none';
+            return;
+        }
+        this.profileRole.style.display = '';
+        this.profileRole.textContent = AuthService.isDM() ? t('header.roleDm') : t('header.rolePlayer');
+    }
+
     toggleProfilePanel() {
         if (this.isProfileOpen) {
             this.closeProfilePanel();
@@ -201,6 +262,7 @@ class UIService {
             this.isProfileOpen = true;
             if (this.desktopProfileBtn) {
                 this.desktopProfileBtn.classList.add('active');
+                this.desktopProfileBtn.setAttribute('aria-expanded', 'true');
             }
             if (this.mobileProfileBtn) {
                 this.mobileProfileBtn.classList.add('active');
@@ -215,6 +277,7 @@ class UIService {
             this.isProfileOpen = false;
             if (this.desktopProfileBtn) {
                 this.desktopProfileBtn.classList.remove('active');
+                this.desktopProfileBtn.setAttribute('aria-expanded', 'false');
             }
             if (this.mobileProfileBtn) {
                 this.mobileProfileBtn.classList.remove('active');

@@ -27,10 +27,20 @@ body.app-loading .control-panel-container,
 body.app-loading .panel-open-btn,
 body.app-loading .mobile-top-panel,
 body.app-loading .mobile-search-panel,
-body.app-loading .profile-panel,
-body.app-loading .desktop-profile-btn,
 body.app-loading #dm-tools-panel-container {
     display: none !important;
+}
+
+/* The profile button lives in the always-visible header, so it isn't tied
+   to app-loading (map readiness) — it should appear as soon as a user is
+   signed in, on login/world-selection/world-control/map alike. main.js
+   adds .user-authenticated to body as soon as a session is confirmed. */
+.desktop-profile-btn {
+    display: none;
+}
+
+body.user-authenticated .desktop-profile-btn {
+    display: flex;
 }
 
 #map {

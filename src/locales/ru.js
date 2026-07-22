@@ -6,6 +6,16 @@ export default {
     cancel: 'Отмена',
     confirm: 'Подтвердить',
   },
+  header: {
+    profileMenuTitle: 'Профиль',
+    accountSettings: 'Настройки аккаунта',
+    logout: 'Выйти',
+    loggingOut: 'Выход...',
+    roleDm: 'Мастер',
+    rolePlayer: 'Игрок',
+    defaultUsername: 'Пользователь',
+    defaultRole: 'Роль',
+  },
   login: {
     title: 'Horizone',
     subtitle: 'Интерактивные карты',

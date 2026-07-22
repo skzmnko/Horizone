@@ -96,16 +96,6 @@
     flex-shrink: 0;
 }
 
-/* The account button now lives inside the header instead of floating in
-   the top-right corner on its own — same element/id/behaviour, only its
-   position changed, so it no longer needs its own fixed offset. */
-.mg-app-header__actions .desktop-profile-btn {
-    position: static;
-    top: auto;
-    right: auto;
-    z-index: auto;
-}
-
 @media (max-width: 768px) {
     :root {
         --mg-header-height: 48px;

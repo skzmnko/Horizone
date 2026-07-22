@@ -6,6 +6,16 @@ export default {
     cancel: 'Cancel',
     confirm: 'Confirm',
   },
+  header: {
+    profileMenuTitle: 'Profile',
+    accountSettings: 'Account settings',
+    logout: 'Log out',
+    loggingOut: 'Logging out...',
+    roleDm: 'Master',
+    rolePlayer: 'Player',
+    defaultUsername: 'User',
+    defaultRole: 'Role',
+  },
   login: {
     title: 'Trace & Place',
     subtitle: 'Interactive Maps',
