@@ -226,7 +226,7 @@ class AccountSettingsPage {
 
     close() {
         this.hide();
-        if (this.onClose) this.onClose({ profileUpdated: false });
+        if (this.onClose) this.onClose({ profileUpdated: false, closed: true });
     }
 
     hide() {

@@ -58,6 +58,7 @@ class Application {
         this.uiService = null;
         this.loginPage = null;
         this.worldSelectionPage = null;
+        this.accountSettingsPage = null;
         this.dmToolsPanel = null;
         this.currentMapId = null;
         this.isMobile = window.innerWidth <= 768;
@@ -134,10 +135,17 @@ class Application {
     }
 
     showAccountSettingsPage() {
-        const accountSettingsPage = new AccountSettingsPage();
-        accountSettingsPage.initialize(({ profileUpdated } = {}) => {
+        if (this.accountSettingsPage) {
+            // Already open — avoid stacking a second overlay on top of it.
+            return;
+        }
+        this.accountSettingsPage = new AccountSettingsPage();
+        this.accountSettingsPage.initialize(({ profileUpdated, closed } = {}) => {
             if (profileUpdated) {
                 this.uiService.refreshProfileUser();
+            }
+            if (closed) {
+                this.accountSettingsPage = null;
             }
         });
     }
