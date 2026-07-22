@@ -740,6 +740,26 @@ using (is_world_member(id) or is_public = true);
 -- their world" already allows the owner (owner_id = auth.uid()) to
 -- change any field of their world, including is_public.
 
+-- =====================================================================
+-- 17. Account settings page — additional profile fields.
+--
+-- "Account name" (profiles.display_name) already existed and is
+-- unique across the app (used for invites, world membership display,
+-- etc.) — reused as-is here, no schema change needed for it.
+--
+-- First name / last name are new, optional, free-form fields with no
+-- uniqueness constraint — purely personal info shown/edited on the
+-- Account settings page. Email is intentionally NOT stored here: it
+-- keeps living on auth.users and is read from the session, not from
+-- profiles (the page only displays it, read-only, for now).
+-- =====================================================================
+
+alter table profiles add column if not exists first_name text;
+alter table profiles add column if not exists last_name text;
+
+-- Existing RLS policy "Users can update their own profile"
+-- (using/with check id = auth.uid()) already covers these new columns
+-- — no policy changes required.
 
 -- =====================================================================
 -- End.

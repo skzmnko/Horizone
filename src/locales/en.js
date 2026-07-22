@@ -117,7 +117,7 @@ export default {
 
     dangerSectionTitle: 'Danger zone',
     dangerSectionHint: 'Request permanent deletion of your account. This cannot be undone.',
-    deleteRequestButton: 'Request to delete account',
+    deleteRequestButton: 'Delete account',
 
     errorDisplayNameTaken: 'This account name is already taken',
     errorGeneric: 'Something went wrong. Please try again.',

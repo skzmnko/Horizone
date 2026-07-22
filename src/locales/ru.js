@@ -117,7 +117,7 @@ export default {
 
     dangerSectionTitle: 'Опасная зона',
     dangerSectionHint: 'Запросить безвозвратное удаление аккаунта. Это действие нельзя отменить.',
-    deleteRequestButton: 'Запросить удаление аккаунта',
+    deleteRequestButton: 'Удалить аккаунт',
 
     errorDisplayNameTaken: 'Это имя аккаунта уже занято',
     errorGeneric: 'Что-то пошло не так. Попробуй ещё раз.',

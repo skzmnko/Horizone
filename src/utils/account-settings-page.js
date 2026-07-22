@@ -95,10 +95,17 @@ class AccountSettingsPage {
         const errorEl = document.getElementById('as-info-error');
         const successEl = document.getElementById('as-info-success');
 
+        let savedValues = {
+            firstName: firstNameInput.value,
+            lastName: lastNameInput.value,
+            accountName: accountNameInput.value
+        };
+
         const updateSaveState = () => {
-            const anyFilled = [firstNameInput, lastNameInput, accountNameInput]
-                .some(input => input.value.trim().length > 0);
-            saveBtn.disabled = !anyFilled;
+            const isDirty = firstNameInput.value !== savedValues.firstName
+                || lastNameInput.value !== savedValues.lastName
+                || accountNameInput.value !== savedValues.accountName;
+            saveBtn.disabled = !isDirty;
         };
 
         [firstNameInput, lastNameInput, accountNameInput].forEach(input => {
@@ -143,6 +150,11 @@ class AccountSettingsPage {
             });
 
             if (result.success) {
+                savedValues = {
+                    firstName: firstNameInput.value,
+                    lastName: lastNameInput.value,
+                    accountName: accountNameInput.value
+                };
                 successEl.textContent = t('accountSettings.saveSuccess');
                 successEl.classList.remove('hidden');
                 if (this.onClose) this.onClose({ profileUpdated: true });
