@@ -64,6 +64,53 @@ class AuthService {
     return { success: true, user: this.currentUser };
   }
 
+  // Used by the Account settings page. displayName ("Account name") is
+  // unique across the app, so it's only availability-checked (and only
+  // touched at all) when it actually changed — first/last name have no
+  // such constraint and are always written as given.
+  async updateProfile({ firstName, lastName, displayName }) {
+    const current = this.currentUser;
+    const trimmedDisplayName = (displayName || '').trim();
+    const displayNameChanged = current && trimmedDisplayName !== current.displayName;
+
+    if (displayNameChanged) {
+      if (!trimmedDisplayName) {
+        return { success: false, errorCode: ERROR_CODES.GENERIC };
+      }
+      const available = await this.checkDisplayNameAvailable(trimmedDisplayName);
+      if (!available) {
+        return { success: false, errorCode: ERROR_CODES.DISPLAY_NAME_TAKEN };
+      }
+    }
+
+    const updatePayload = {
+      first_name: (firstName || '').trim() || null,
+      last_name: (lastName || '').trim() || null
+    };
+    if (displayNameChanged) {
+      updatePayload.display_name = trimmedDisplayName;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updatePayload)
+      .eq('id', current.id);
+
+    if (error) {
+      console.warn('❌ Update profile error:', error.message);
+      return { success: false, errorCode: mapSupabaseErrorToCode(error.message) };
+    }
+
+    this.currentUser = {
+      ...current,
+      firstName: updatePayload.first_name || '',
+      lastName: updatePayload.last_name || '',
+      displayName: displayNameChanged ? trimmedDisplayName : current.displayName
+    };
+
+    return { success: true };
+  }
+
   async deleteMyAccount() {
     const { error } = await supabase.rpc('delete_my_account');
     if (error) {
@@ -120,7 +167,7 @@ class AuthService {
     const user = session.user;
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('display_name')
+      .select('display_name, first_name, last_name')
       .eq('id', user.id)
       .maybeSingle();
     if (error) {
@@ -129,7 +176,9 @@ class AuthService {
     this.currentUser = {
       id: user.id,
       email: user.email,
-      displayName: profile?.display_name || user.email
+      displayName: profile?.display_name || user.email,
+      firstName: profile?.first_name || '',
+      lastName: profile?.last_name || ''
     };
     this.isAuthenticated = true;
   }

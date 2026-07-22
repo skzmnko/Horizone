@@ -11,6 +11,7 @@ import LoginPage from './utils/login-page.js';
 import ResetPasswordPage from './utils/reset-password-page.js';
 import WorldSelectionPage from './utils/world-selection-page.js';
 import WorldControlPage from './utils/world-control-page.js';
+import AccountSettingsPage from './utils/account-settings-page.js';
 import MapImageService from './services/map-image-service.js';
 import WorldsService from './services/worlds-service.js';
 import DetailPanelService from './services/detail-panel-service.js';
@@ -70,6 +71,7 @@ class Application {
             setLanguage('en');
             this.uiService = new UIService();
             this.uiService.initializeProfileMenu();
+            this.uiService.onAccountSettingsClick = () => this.showAccountSettingsPage();
 
             let recoveryHandled = false;
             AuthService.onAuthStateChange((event) => {
@@ -128,6 +130,15 @@ class Application {
             }
 
             this.showWorldSelectionPage();
+        });
+    }
+
+    showAccountSettingsPage() {
+        const accountSettingsPage = new AccountSettingsPage();
+        accountSettingsPage.initialize(({ profileUpdated } = {}) => {
+            if (profileUpdated) {
+                this.uiService.refreshProfileUser();
+            }
         });
     }
 

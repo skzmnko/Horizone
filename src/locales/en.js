@@ -100,5 +100,27 @@ export default {
     errorDeleteWorlds: 'Failed to delete: {message}',
     errorUploadCover: 'Failed to upload cover: {message}',
     errorOpenWorld: 'Failed to open world: {message}',
+  },
+  accountSettings: {
+    backButton: '← Back',
+    pageTitle: 'Account settings',
+    pageTagline: 'Manage your account',
+
+    infoSectionTitle: 'Account information',
+    infoSectionHint: 'Your personal details and how your name appears across Horizone.',
+    firstNameLabel: 'First name',
+    lastNameLabel: 'Last name',
+    emailLabel: 'Email',
+    accountNameLabel: 'Account name',
+    saveButton: 'Save',
+    saveSuccess: 'Your account information has been updated.',
+
+    dangerSectionTitle: 'Danger zone',
+    dangerSectionHint: 'Request permanent deletion of your account. This cannot be undone.',
+    deleteRequestButton: 'Request to delete account',
+
+    errorDisplayNameTaken: 'This account name is already taken',
+    errorGeneric: 'Something went wrong. Please try again.',
+    errorNetworkError: 'Network error, please try again',
   }
 };

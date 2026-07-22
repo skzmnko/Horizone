@@ -27,6 +27,7 @@ class UIService {
         this.desktopProfileAvatar = null;
         this.profileAvatar = null;
         this.isProfileOpen = false;
+        this.onAccountSettingsClick = null;
     }
 
     initialize() {
@@ -163,10 +164,18 @@ class UIService {
         this.profileLogoutBtnLabel = document.getElementById('profile-logout-btn-label');
         this.desktopProfileAvatar = document.getElementById('desktop-profile-avatar');
         this.profileAvatar = document.getElementById('profile-avatar');
+        this.profileAccountSettingsBtn = document.getElementById('profile-account-settings-btn');
 
         this.applyStaticI18n();
         this.refreshProfileUser();
         this.refreshProfileRole();
+
+        if (this.profileAccountSettingsBtn) {
+            this.profileAccountSettingsBtn.addEventListener('click', () => {
+                this.closeProfilePanel();
+                if (this.onAccountSettingsClick) this.onAccountSettingsClick();
+            });
+        }
 
         if (this.profileLogoutBtn) {
             this.profileLogoutBtn.addEventListener('click', async () => {

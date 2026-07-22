@@ -100,5 +100,27 @@ export default {
     errorDeleteWorlds: 'Не удалось удалить: {message}',
     errorUploadCover: 'Не удалось загрузить обложку: {message}',
     errorOpenWorld: 'Не удалось открыть мир: {message}',
+  },
+  accountSettings: {
+    backButton: '← Назад',
+    pageTitle: 'Настройки аккаунта',
+    pageTagline: 'Управление аккаунтом',
+
+    infoSectionTitle: 'Информация об аккаунте',
+    infoSectionHint: 'Личные данные и то, как твоё имя отображается в Horizone.',
+    firstNameLabel: 'Имя',
+    lastNameLabel: 'Фамилия',
+    emailLabel: 'Email',
+    accountNameLabel: 'Имя аккаунта',
+    saveButton: 'Сохранить',
+    saveSuccess: 'Информация об аккаунте обновлена.',
+
+    dangerSectionTitle: 'Опасная зона',
+    dangerSectionHint: 'Запросить безвозвратное удаление аккаунта. Это действие нельзя отменить.',
+    deleteRequestButton: 'Запросить удаление аккаунта',
+
+    errorDisplayNameTaken: 'Это имя аккаунта уже занято',
+    errorGeneric: 'Что-то пошло не так. Попробуй ещё раз.',
+    errorNetworkError: 'Ошибка сети, попробуй ещё раз',
   }
 };

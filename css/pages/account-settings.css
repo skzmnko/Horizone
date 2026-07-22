@@ -1,0 +1,96 @@
+/* =====================================================================
+   Account settings page.
+   Same base page shell as world-selection/world-control (.tp-home,
+   .tp-header, .tp-btn, .tp-modal-input) — the section/row/footer
+   pattern here is modeled on Supabase's project "Preferences"-style
+   settings pages: a bordered card, a label+description header, a
+   stack of label/field rows, and a visually distinct footer strip
+   (different background, border-top) holding the primary action for
+   that card.
+   ===================================================================== */
+
+.as-page {
+    max-width: 720px;
+    margin: 0 auto;
+    z-index: 12000;
+}
+
+.as-section {
+    background: var(--mg-bg-panel);
+    border: 1px solid var(--mg-border);
+    border-radius: var(--mg-radius-xl);
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.as-section-header {
+    padding: 20px 20px 4px;
+}
+
+.as-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--mg-font-display);
+    color: var(--mg-text-accent);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.as-section-hint {
+    font-size: 0.82rem;
+    color: var(--mg-text-secondary);
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.as-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--mg-border);
+}
+
+.as-row label {
+    flex: 0 0 160px;
+    font-size: 0.85rem;
+    color: var(--mg-text-secondary);
+}
+
+.as-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.as-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.as-inline-msg {
+    margin: 0 20px 14px;
+}
+
+.as-section-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    background: var(--mg-bg-secondary);
+    border-top: 1px solid var(--mg-border);
+}
+
+.as-section-danger .as-section-footer {
+    background: rgba(220, 53, 69, 0.08);
+}
+
+@media (max-width: 640px) {
+    .as-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .as-row label {
+        flex: none;
+    }
+}
