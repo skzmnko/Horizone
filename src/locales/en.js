@@ -65,7 +65,7 @@ export default {
     sortAZ: 'A-Z',
     sortLatest: 'Latest',
     joinByCodeLink: 'Have an invite code?',
-    emptyWorlds: "You don't have any worlds yet — create your first one above",
+    emptyWorlds: "You don't have any worlds yet",
     publicWorldsTitle: '🌍 Public worlds',
     deleteAccountButton: 'Delete my account permanently',
     roleDm: '🎲 Master',

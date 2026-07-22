@@ -65,7 +65,7 @@ export default {
     sortAZ: 'А-Я',
     sortLatest: 'Новые',
     joinByCodeLink: 'Есть код приглашения?',
-    emptyWorlds: 'У тебя пока нет ни одного мира — создай первый выше',
+    emptyWorlds: 'У вас пока нет ни одного мира',
     publicWorldsTitle: '🌍 Публичные миры',
     deleteAccountButton: 'Удалить мой аккаунт безвозвратно',
     roleDm: '🎲 Мастер',

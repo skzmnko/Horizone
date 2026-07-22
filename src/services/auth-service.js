@@ -117,6 +117,20 @@ class AuthService {
       console.warn('❌ Delete account error:', error.message);
       return { success: false, errorCode: mapSupabaseErrorToCode(error.message) };
     }
+    // The account row is gone server-side, but supabase.auth.getSession()
+    // only reads the locally cached session — it never validates it
+    // against the server. Without an explicit signOut() here, a
+    // subsequent page reload would still find that stale local session
+    // and treat the (now-deleted) user as authenticated. signOut()
+    // clears it so the next checkAuthStatus() correctly reports false.
+    try {
+      await supabase.auth.signOut();
+    } catch (signOutError) {
+      // The account (and its refresh token) is already gone server-side,
+      // so the server-side half of signOut() can fail here — that's
+      // fine, what matters is that it still clears local storage.
+      console.warn('⚠️ signOut after account deletion (non-fatal):', signOutError.message);
+    }
     this.currentUser = null;
     this.isAuthenticated = false;
     this.currentWorldRole = null;
