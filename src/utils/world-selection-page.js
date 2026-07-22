@@ -58,7 +58,6 @@ class WorldSelectionPage {
 
         this.container.innerHTML = `
             <div class="tp-header">
-                <button class="tp-logout-btn" id="tp-logout-btn">${t('worldSelection.logoutButton')}</button>
                 <img src="/logo.svg" alt="Horizone" class="tp-logo-img">
             </div>
 
@@ -266,19 +265,6 @@ class WorldSelectionPage {
     }
 
     bindEvents() {
-        document.getElementById('tp-logout-btn').addEventListener('click', async (e) => {
-            const btn = e.currentTarget;
-            btn.disabled = true;
-            btn.textContent = t('worldSelection.loggingOut');
-            try {
-                await AuthService.logout();
-            } catch (err) {
-                console.warn('⚠️ Logout error (proceeding anyway):', err);
-            } finally {
-                window.location.reload();
-            }
-        });
-
         document.getElementById('tp-delete-account-btn').addEventListener('click', async () => {
             const confirmed = await this.showConfirmModal({
                 title: t('worldSelection.deleteAccountTitle'),

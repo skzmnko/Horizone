@@ -79,6 +79,10 @@
     font-family: var(--mg-font-display);
 }
 
+/* Shared corner-button style — also used by world-control-page.js's
+   "back to all worlds" button (#wc-back-btn), not just logout-style
+   actions, so this stays even though world-selection no longer has a
+   logout button of its own. */
 .tp-logout-btn {
     position: absolute;
     top: 0;
