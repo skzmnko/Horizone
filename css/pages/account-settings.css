@@ -13,6 +13,25 @@
     max-width: 720px;
     margin: 0 auto;
     z-index: 12000;
+    position: relative;
+}
+
+/* .as-page itself is only 720px wide (max-width + margin:0 auto
+   shrink it from .tp-home's full-bleed left:0/right:0), so its own
+   background only paints under that centered column — whatever page
+   was open before Account settings still showed through on the
+   sides. This pseudo-element is `position: fixed; inset: 0`
+   independently of that, so it always covers the *entire* viewport
+   as a dedicated backdrop, regardless of how narrow the actual
+   content column is. Blur only, no color tint — keeps the backdrop
+   from reading clearly without lightening/recoloring it. */
+.as-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: -1;
 }
 
 .as-section {
