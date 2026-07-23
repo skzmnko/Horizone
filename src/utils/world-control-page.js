@@ -1,5 +1,6 @@
 import WorldsService from '../services/worlds-service.js';
 import MapImageService from '../services/map-image-service.js';
+import { t, getCurrentLanguage } from '../services/i18n.js';
 
 // Страница управления миром — открывается у DM сразу после клика по
 // карточке мира на world-selection-page. Сюда стекается вся деятельность
@@ -58,51 +59,51 @@ class WorldControlPage {
 
         const gridHtml = this.maps.length > 0
             ? `<div class="tp-grid">${this.maps.map(m => this.renderMapCard(m)).join('')}</div>`
-            : `<div class="tp-empty">В этом мире пока нет ни одной карты — добавь первую выше</div>`;
+            : `<div class="tp-empty">${t('worldControl.emptyMaps')}</div>`;
 
         this.container.innerHTML = `
             <div class="tp-header wc-header">
-                <button class="tp-logout-btn" id="wc-back-btn">← Ко всем мирам</button>
+                <button class="tp-logout-btn" id="wc-back-btn">${t('worldControl.backButton')}</button>
                 <div class="tp-logo wc-title">${worldName}</div>
-                <div class="tp-tagline">Управление миром</div>
+                <div class="tp-tagline">${t('worldControl.pageTagline')}</div>
             </div>
 
             <div class="wc-page">
                 <div class="wc-section">
-                    <div class="wc-section-title">🌍 Видимость мира</div>
-                    <div class="wc-section-hint">Публичный мир виден в списке всем зарегистрированным пользователям приложения (только название и обложка — карты и локации по-прежнему доступны только участникам). Приватный мир виден только тебе.</div>
+                    <div class="wc-section-title">${t('worldControl.visibilityTitle')}</div>
+                    <div class="wc-section-hint">${t('worldControl.visibilityHint')}</div>
                     <label class="dm-invite-option">
                         <input type="checkbox" id="wc-is-public" ${this.world.is_public ? 'checked' : ''}>
-                        Сделать мир публичным
+                        ${t('worldControl.makePublicLabel')}
                     </label>
                 </div>
 
                 <div class="wc-section">
-                    <div class="wc-section-title">✉️ Приглашения</div>
-                    <div class="wc-section-hint">Сгенерируй код и перешли его игроку сам (например, по почте) — он введёт его в приложении на экране выбора миров и присоединится как наблюдатель.</div>
+                    <div class="wc-section-title">${t('worldControl.invitesTitle')}</div>
+                    <div class="wc-section-hint">${t('worldControl.invitesHint')}</div>
                     <div class="dm-invite-controls">
                         <label class="dm-invite-option">
                             <input type="checkbox" id="wc-invite-single-use">
-                            Одноразовая (для одного игрока)
+                            ${t('worldControl.singleUseLabel')}
                         </label>
                         <select id="wc-invite-expiry" class="dm-invite-expiry-select">
-                            <option value="">Без срока действия</option>
-                            <option value="24">На 24 часа</option>
-                            <option value="168">На 7 дней</option>
+                            <option value="">${t('worldControl.expiryNoneOption')}</option>
+                            <option value="24">${t('worldControl.expiry24hOption')}</option>
+                            <option value="168">${t('worldControl.expiry7dOption')}</option>
                         </select>
-                        <button id="wc-create-invite-btn" class="tp-btn tp-btn-primary">➕ Создать приглашение</button>
+                        <button id="wc-create-invite-btn" class="tp-btn tp-btn-primary">${t('worldControl.createInviteButton')}</button>
                     </div>
                     <div class="dm-invite-list" id="wc-invite-list">
-                        <div class="dm-empty-list">Пока нет активных приглашений</div>
+                        <div class="dm-empty-list">${t('worldControl.noActiveInvites')}</div>
                     </div>
                 </div>
             </div>
 
-            <div class="tp-section-title">Карты</div>
+            <div class="tp-section-title">${t('worldControl.mapsSectionTitle')}</div>
 
             <div class="tp-toolbar">
-                <button class="tp-btn tp-btn-primary" id="wc-add-map-btn">+ Добавить карту</button>
-                <button class="tp-btn tp-btn-danger" id="wc-delete-map-btn" disabled>Удалить карту</button>
+                <button class="tp-btn tp-btn-primary" id="wc-add-map-btn">${t('worldControl.addMapButton')}</button>
+                <button class="tp-btn tp-btn-danger" id="wc-delete-map-btn" disabled>${t('worldControl.deleteMapButton')}</button>
             </div>
 
             ${gridHtml}
@@ -116,7 +117,7 @@ class WorldControlPage {
     renderMapCard(map) {
         const hasImage = !!map.image_path;
         const isSelected = this.selectedMapIds.has(map.id);
-        const name = this.escapeHtml(map.name || 'Карта мира');
+        const name = this.escapeHtml(map.name || t('worldControl.defaultMapName'));
 
         const imageHtml = hasImage
             ? `<img src="${MapImageService.getPublicUrl(map.image_path)}" class="tp-card-image" alt="${name}">`
@@ -131,12 +132,12 @@ class WorldControlPage {
                     <label class="tp-card-checkbox-wrap">
                         <input type="checkbox" class="tp-card-checkbox" data-map-id="${map.id}" ${isSelected ? 'checked' : ''}>
                     </label>
-                    <button class="tp-card-cover-btn" data-map-id="${map.id}" title="${hasImage ? 'Заменить изображение карты' : 'Загрузить изображение карты'}">🖼</button>
+                    <button class="tp-card-cover-btn" data-map-id="${map.id}" title="${hasImage ? t('worldControl.replaceMapImageTitle') : t('worldControl.uploadMapImageTitle')}">🖼</button>
                     <input type="file" accept="image/*" class="tp-cover-input" data-map-id="${map.id}">
                 </div>
                 <div class="tp-card-name">
                     ${name}
-                    <span class="tp-card-role">${hasImage ? '🗺️ Готова' : '⬆️ Нет изображения'}</span>
+                    <span class="tp-card-role">${hasImage ? t('worldControl.mapReadyBadge') : t('worldControl.mapNoImageBadge')}</span>
                 </div>
             </div>
         `;
@@ -162,7 +163,7 @@ class WorldControlPage {
                     <div class="tp-modal-title">${this.escapeHtml(title)}</div>
                     <input type="text" class="tp-modal-input" id="tp-modal-input" placeholder="${this.escapeHtml(placeholder)}">
                     <div class="tp-modal-actions">
-                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn" id="tp-modal-cancel">${t('worldSelection.modalCancel')}</button>
                         <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
                     </div>
                 </div>
@@ -200,7 +201,7 @@ class WorldControlPage {
                     <div class="tp-modal-title">${this.escapeHtml(title)}</div>
                     <div class="tp-modal-message">${message}</div>
                     <div class="tp-modal-actions">
-                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn" id="tp-modal-cancel">${t('worldSelection.modalCancel')}</button>
                         <button class="tp-btn ${danger ? 'tp-btn-danger' : 'tp-btn-primary'}" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
                     </div>
                 </div>
@@ -228,9 +229,9 @@ class WorldControlPage {
 
         document.getElementById('wc-add-map-btn').addEventListener('click', async () => {
             const name = await this.showPromptModal({
-                title: 'Название новой карты',
-                placeholder: 'Например, Подземелья Ораски',
-                confirmLabel: 'Добавить'
+                title: t('worldControl.newMapTitle'),
+                placeholder: t('worldControl.newMapPlaceholder'),
+                confirmLabel: t('worldControl.addMapConfirm')
             });
             if (!name) return;
 
@@ -238,7 +239,7 @@ class WorldControlPage {
                 await WorldsService.createMap(this.worldId, name);
                 await this.reloadMaps();
             } catch (err) {
-                this.showError('Не удалось создать карту: ' + err.message);
+                this.showError(t('worldControl.errorCreateMap', { message: err.message }));
             }
         });
 
@@ -247,13 +248,13 @@ class WorldControlPage {
 
             const names = this.maps
                 .filter(m => this.selectedMapIds.has(m.id))
-                .map(m => this.escapeHtml(m.name || 'Карта мира'))
+                .map(m => this.escapeHtml(m.name || t('worldControl.defaultMapName')))
                 .join(', ');
 
             const confirmed = await this.showConfirmModal({
-                title: 'Удалить карты?',
-                message: `Удалить выбранные карты (<strong>${names}</strong>) со всеми их локациями? Это необратимо.`,
-                confirmLabel: 'Удалить'
+                title: t('worldControl.deleteMapsTitle'),
+                message: t('worldControl.deleteMapsMessage', { names }),
+                confirmLabel: t('worldControl.deleteMapsConfirm')
             });
             if (!confirmed) return;
 
@@ -263,7 +264,7 @@ class WorldControlPage {
                 }
                 await this.reloadMaps();
             } catch (err) {
-                this.showError('Не удалось удалить: ' + err.message);
+                this.showError(t('worldControl.errorDeleteMaps', { message: err.message }));
             }
         });
 
@@ -279,7 +280,7 @@ class WorldControlPage {
                 this.world.is_public = isPublic;
             } catch (err) {
                 publicToggle.checked = !isPublic;
-                this.showError('Не удалось изменить видимость мира: ' + err.message);
+                this.showError(t('worldControl.errorUpdateVisibility', { message: err.message }));
             } finally {
                 publicToggle.disabled = false;
             }
@@ -332,7 +333,7 @@ class WorldControlPage {
                     await MapImageService.uploadMapImage(file, this.worldId, mapId);
                     await this.reloadMaps();
                 } catch (err) {
-                    this.showError('Не удалось загрузить изображение: ' + err.message);
+                    this.showError(t('worldControl.errorUploadImage', { message: err.message }));
                 }
             });
         });
@@ -349,7 +350,7 @@ class WorldControlPage {
         if (!map) return;
 
         if (!map.image_path) {
-            this.showError('У этой карты пока нет изображения — нажми 🖼, чтобы загрузить.');
+            this.showError(t('worldControl.errorNoImageClickToUpload'));
             return;
         }
 
@@ -377,19 +378,19 @@ class WorldControlPage {
             });
             await this.loadInvites();
         } catch (err) {
-            this.showError('Не удалось создать приглашение: ' + err.message);
+            this.showError(t('worldControl.errorCreateInvite', { message: err.message }));
         }
     }
 
     async handleRevokeInvite(inviteId) {
         if (!inviteId) return;
-        if (!confirm('Отозвать это приглашение? Ссылка перестанет работать.')) return;
+        if (!confirm(t('worldControl.revokeConfirm'))) return;
 
         try {
             await WorldsService.revokeInvite(inviteId);
             await this.loadInvites();
         } catch (err) {
-            this.showError('Не удалось отозвать приглашение: ' + err.message);
+            this.showError(t('worldControl.errorRevokeInvite', { message: err.message }));
         }
     }
 
@@ -408,23 +409,25 @@ class WorldControlPage {
         if (!this.inviteListContainer) return;
 
         if (!this.invites || this.invites.length === 0) {
-            this.inviteListContainer.innerHTML = `<div class="dm-empty-list">Пока нет активных приглашений</div>`;
+            this.inviteListContainer.innerHTML = `<div class="dm-empty-list">${t('worldControl.noActiveInvites')}</div>`;
             return;
         }
+
+        const dateLocale = getCurrentLanguage() === 'ru' ? 'ru-RU' : 'en-US';
 
         this.inviteListContainer.innerHTML = this.invites.map(inv => {
             const usage = inv.max_uses ? `${inv.uses_count}/${inv.max_uses}` : `${inv.uses_count}/∞`;
             const expiry = inv.expires_at
-                ? new Date(inv.expires_at).toLocaleString('ru-RU')
-                : 'бессрочно';
+                ? new Date(inv.expires_at).toLocaleString(dateLocale)
+                : t('worldControl.inviteNoExpiry');
 
             return `
                 <div class="dm-invite-item">
                     <div class="dm-invite-code">${this.escapeHtml(inv.code)}</div>
-                    <div class="dm-invite-meta">Использовано: ${usage} · до ${expiry}</div>
+                    <div class="dm-invite-meta">${t('worldControl.inviteUsageMeta', { usage, expiry })}</div>
                     <div class="dm-invite-actions">
-                        <button class="dm-invite-copy-btn" data-code="${this.escapeHtml(inv.code)}" title="Скопировать код">📋 Копировать код</button>
-                        <button class="dm-invite-revoke-btn" data-invite-id="${inv.id}" title="Отозвать">✕</button>
+                        <button class="dm-invite-copy-btn" data-code="${this.escapeHtml(inv.code)}" title="${t('worldControl.copyCodeTitle')}">${t('worldControl.copyCodeButton')}</button>
+                        <button class="dm-invite-revoke-btn" data-invite-id="${inv.id}" title="${t('worldControl.revokeTitle')}">✕</button>
                     </div>
                 </div>
             `;
@@ -435,10 +438,10 @@ class WorldControlPage {
         navigator.clipboard.writeText(text).then(() => {
             if (!btn) return;
             const original = btn.textContent;
-            btn.textContent = '✅ Скопировано';
+            btn.textContent = t('worldControl.copiedLabel');
             setTimeout(() => { btn.textContent = original; }, 1500);
         }).catch(() => {
-            window.prompt('Скопируй ссылку вручную:', text);
+            window.prompt(t('worldControl.clipboardFallbackPrompt'), text);
         });
     }
 
