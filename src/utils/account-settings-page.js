@@ -65,6 +65,7 @@ class AccountSettingsPage {
                 <div id="as-info-success" class="error-message login-info hidden as-inline-msg"></div>
 
                 <div class="as-section-footer">
+                    <button class="tp-btn" id="as-cancel-btn" hidden>${t('common.cancel')}</button>
                     <button class="tp-btn tp-btn-primary" id="as-save-btn" disabled>${t('accountSettings.saveButton')}</button>
                 </div>
             </div>
@@ -92,6 +93,7 @@ class AccountSettingsPage {
         const lastNameInput = document.getElementById('as-last-name');
         const accountNameInput = document.getElementById('as-account-name');
         const saveBtn = document.getElementById('as-save-btn');
+        const cancelBtn = document.getElementById('as-cancel-btn');
         const errorEl = document.getElementById('as-info-error');
         const successEl = document.getElementById('as-info-success');
 
@@ -106,6 +108,7 @@ class AccountSettingsPage {
                 || lastNameInput.value !== savedValues.lastName
                 || accountNameInput.value !== savedValues.accountName;
             saveBtn.disabled = !isDirty;
+            cancelBtn.hidden = !isDirty;
         };
 
         [firstNameInput, lastNameInput, accountNameInput].forEach(input => {
@@ -114,6 +117,15 @@ class AccountSettingsPage {
                 successEl.classList.add('hidden');
                 updateSaveState();
             });
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            firstNameInput.value = savedValues.firstName;
+            lastNameInput.value = savedValues.lastName;
+            accountNameInput.value = savedValues.accountName;
+            errorEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+            updateSaveState();
         });
 
         // Danger zone — same "Delete account?" confirmation used to live

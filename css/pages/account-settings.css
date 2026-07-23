@@ -93,6 +93,7 @@
 .as-section-footer {
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
     padding: 14px 20px;
     background: var(--mg-bg-secondary);
     border-top: 1px solid var(--mg-border);
