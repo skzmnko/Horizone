@@ -1,11 +1,15 @@
 import WorldsService from '../services/worlds-service.js';
 import MapImageService from '../services/map-image-service.js';
-import MapUploadPage from './map-upload-page.js';
 
 // Страница управления миром — открывается у DM сразу после клика по
 // карточке мира на world-selection-page. Сюда стекается вся деятельность
-// по управлению миром: загрузка/замена карты, приглашения, а в будущем —
-// управление участниками, настройки мира и т.д.
+// по управлению миром: карты (в мире их может быть несколько), приглашения,
+// а в будущем — управление участниками, настройки мира и т.д.
+//
+// Структура и поведение сознательно повторяют world-selection-page.js:
+// заголовок раздела → тулбар → грид плиток (те же .tp-grid/.tp-card
+// классы, чекбоксы для мультивыбора, кнопка загрузки картинки на плитке,
+// открытие по клику на саму плитку).
 //
 // Игроков/наблюдателей эта страница не касается — они, как и раньше,
 // попадают сразу в интерактивную карту (см. main.js: enterWorld()).
@@ -14,7 +18,8 @@ class WorldControlPage {
         this.container = null;
         this.worldId = null;
         this.world = null;
-        this.map = null;
+        this.maps = [];
+        this.selectedMapIds = new Set();
         this.invites = [];
         this.callbacks = {};
     }
@@ -24,11 +29,21 @@ class WorldControlPage {
         this.callbacks = callbacks;
 
         this.world = await WorldsService.getWorld(worldId);
-        this.map = mapId ? await WorldsService.getMap(mapId) : null;
+        await this.loadMaps();
 
         this.render();
         this.bindEvents();
         this.loadInvites();
+    }
+
+    async loadMaps() {
+        try {
+            this.maps = await WorldsService.getMapsForWorld(this.worldId);
+        } catch (err) {
+            console.error('❌ Failed to load maps:', err);
+            this.maps = [];
+        }
+        this.selectedMapIds.clear();
     }
 
     render() {
@@ -37,10 +52,13 @@ class WorldControlPage {
         }
 
         this.container = document.createElement('div');
-        this.container.className = 'tp-home wc-page';
+        this.container.className = 'tp-home';
 
-        const hasMap = !!(this.map && this.map.image_path);
         const worldName = this.escapeHtml(this.world.name);
+
+        const gridHtml = this.maps.length > 0
+            ? `<div class="tp-grid">${this.maps.map(m => this.renderMapCard(m)).join('')}</div>`
+            : `<div class="tp-empty">В этом мире пока нет ни одной карты — добавь первую выше</div>`;
 
         this.container.innerHTML = `
             <div class="tp-header wc-header">
@@ -49,55 +67,79 @@ class WorldControlPage {
                 <div class="tp-tagline">Управление миром</div>
             </div>
 
-            <div class="wc-map-section">
-                <div class="wc-map-block" id="wc-map-block" title="Загрузить/заменить карту">
-                    ${hasMap ? `
-                        <img src="${MapImageService.getPublicUrl(this.map.image_path)}" class="wc-map-image" alt="${worldName}">
-                    ` : `
-                        <div class="wc-map-placeholder" style="background:${this.placeholderGradient(this.world.name)};"></div>
-                    `}
-                    <div class="wc-map-caption">${worldName} Interactive Map</div>
-                    <div class="wc-map-hint">${hasMap ? '🔄 Нажми, чтобы заменить карту' : '⬆️ Нажми, чтобы загрузить карту'}</div>
-                </div>
-
-                <button class="tp-btn tp-btn-primary wc-enter-btn" id="wc-enter-map-btn" ${hasMap ? '' : 'disabled'}>
-                    🗺️ Войти в мир
-                </button>
-            </div>
-
-            <div class="wc-section">
-                <div class="wc-section-title">🌍 Видимость мира</div>
-                <div class="wc-section-hint">Публичный мир виден в списке всем зарегистрированным пользователям приложения (только название и обложка — карты и локации по-прежнему доступны только участникам). Приватный мир виден только тебе.</div>
-                <label class="dm-invite-option">
-                    <input type="checkbox" id="wc-is-public" ${this.world.is_public ? 'checked' : ''}>
-                    Сделать мир публичным
-                </label>
-            </div>
-
-            <div class="wc-section">
-                <div class="wc-section-title">✉️ Приглашения</div>
-                <div class="wc-section-hint">Сгенерируй код и перешли его игроку сам (например, по почте) — он введёт его в приложении на экране выбора миров и присоединится как наблюдатель.</div>
-                <div class="dm-invite-controls">
+            <div class="wc-page">
+                <div class="wc-section">
+                    <div class="wc-section-title">🌍 Видимость мира</div>
+                    <div class="wc-section-hint">Публичный мир виден в списке всем зарегистрированным пользователям приложения (только название и обложка — карты и локации по-прежнему доступны только участникам). Приватный мир виден только тебе.</div>
                     <label class="dm-invite-option">
-                        <input type="checkbox" id="wc-invite-single-use">
-                        Одноразовая (для одного игрока)
+                        <input type="checkbox" id="wc-is-public" ${this.world.is_public ? 'checked' : ''}>
+                        Сделать мир публичным
                     </label>
-                    <select id="wc-invite-expiry" class="dm-invite-expiry-select">
-                        <option value="">Без срока действия</option>
-                        <option value="24">На 24 часа</option>
-                        <option value="168">На 7 дней</option>
-                    </select>
-                    <button id="wc-create-invite-btn" class="tp-btn tp-btn-primary">➕ Создать приглашение</button>
                 </div>
-                <div class="dm-invite-list" id="wc-invite-list">
-                    <div class="dm-empty-list">Пока нет активных приглашений</div>
+
+                <div class="wc-section">
+                    <div class="wc-section-title">✉️ Приглашения</div>
+                    <div class="wc-section-hint">Сгенерируй код и перешли его игроку сам (например, по почте) — он введёт его в приложении на экране выбора миров и присоединится как наблюдатель.</div>
+                    <div class="dm-invite-controls">
+                        <label class="dm-invite-option">
+                            <input type="checkbox" id="wc-invite-single-use">
+                            Одноразовая (для одного игрока)
+                        </label>
+                        <select id="wc-invite-expiry" class="dm-invite-expiry-select">
+                            <option value="">Без срока действия</option>
+                            <option value="24">На 24 часа</option>
+                            <option value="168">На 7 дней</option>
+                        </select>
+                        <button id="wc-create-invite-btn" class="tp-btn tp-btn-primary">➕ Создать приглашение</button>
+                    </div>
+                    <div class="dm-invite-list" id="wc-invite-list">
+                        <div class="dm-empty-list">Пока нет активных приглашений</div>
+                    </div>
                 </div>
             </div>
+
+            <div class="tp-section-title">Карты</div>
+
+            <div class="tp-toolbar">
+                <button class="tp-btn tp-btn-primary" id="wc-add-map-btn">+ Добавить карту</button>
+                <button class="tp-btn tp-btn-danger" id="wc-delete-map-btn" disabled>Удалить карту</button>
+            </div>
+
+            ${gridHtml}
 
             <div id="wc-error" class="error-message hidden tp-error-box"></div>
         `;
 
         document.body.appendChild(this.container);
+    }
+
+    renderMapCard(map) {
+        const hasImage = !!map.image_path;
+        const isSelected = this.selectedMapIds.has(map.id);
+        const name = this.escapeHtml(map.name || 'Карта мира');
+
+        const imageHtml = hasImage
+            ? `<img src="${MapImageService.getPublicUrl(map.image_path)}" class="tp-card-image" alt="${name}">`
+            : `<div class="tp-card-placeholder" style="background:${this.placeholderGradient(map.name || map.id)};">
+                   <span class="tp-card-placeholder-text">${name}</span>
+               </div>`;
+
+        return `
+            <div class="tp-card ${isSelected ? 'selected' : ''}" data-map-id="${map.id}">
+                <div class="tp-card-image-wrap">
+                    ${imageHtml}
+                    <label class="tp-card-checkbox-wrap">
+                        <input type="checkbox" class="tp-card-checkbox" data-map-id="${map.id}" ${isSelected ? 'checked' : ''}>
+                    </label>
+                    <button class="tp-card-cover-btn" data-map-id="${map.id}" title="${hasImage ? 'Заменить изображение карты' : 'Загрузить изображение карты'}">🖼</button>
+                    <input type="file" accept="image/*" class="tp-cover-input" data-map-id="${map.id}">
+                </div>
+                <div class="tp-card-name">
+                    ${name}
+                    <span class="tp-card-role">${hasImage ? '🗺️ Готова' : '⬆️ Нет изображения'}</span>
+                </div>
+            </div>
+        `;
     }
 
     placeholderGradient(name) {
@@ -109,21 +151,120 @@ class WorldControlPage {
         return `linear-gradient(135deg, hsl(${hue}, 40%, 26%), hsl(${(hue + 40) % 360}, 35%, 14%))`;
     }
 
+    // Styled replacement for window.prompt() — same pattern as
+    // world-selection-page.js's showPromptModal
+    showPromptModal({ title, placeholder = '', confirmLabel }) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tp-modal-overlay';
+            overlay.innerHTML = `
+                <div class="tp-modal">
+                    <div class="tp-modal-title">${this.escapeHtml(title)}</div>
+                    <input type="text" class="tp-modal-input" id="tp-modal-input" placeholder="${this.escapeHtml(placeholder)}">
+                    <div class="tp-modal-actions">
+                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn tp-btn-primary" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const input = overlay.querySelector('#tp-modal-input');
+            setTimeout(() => input.focus(), 0);
+
+            const close = (value) => {
+                overlay.remove();
+                resolve(value);
+            };
+
+            overlay.querySelector('#tp-modal-cancel').addEventListener('click', () => close(null));
+            overlay.querySelector('#tp-modal-confirm').addEventListener('click', () => close(input.value.trim() || null));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') close(input.value.trim() || null);
+                if (e.key === 'Escape') close(null);
+            });
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close(null);
+            });
+        });
+    }
+
+    // Styled replacement for window.confirm() — same pattern as
+    // world-selection-page.js's showConfirmModal
+    showConfirmModal({ title, message, confirmLabel, danger = true }) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tp-modal-overlay';
+            overlay.innerHTML = `
+                <div class="tp-modal">
+                    <div class="tp-modal-title">${this.escapeHtml(title)}</div>
+                    <div class="tp-modal-message">${message}</div>
+                    <div class="tp-modal-actions">
+                        <button class="tp-btn" id="tp-modal-cancel">Отмена</button>
+                        <button class="tp-btn ${danger ? 'tp-btn-danger' : 'tp-btn-primary'}" id="tp-modal-confirm">${this.escapeHtml(confirmLabel)}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const close = (value) => {
+                overlay.remove();
+                resolve(value);
+            };
+
+            overlay.querySelector('#tp-modal-cancel').addEventListener('click', () => close(false));
+            overlay.querySelector('#tp-modal-confirm').addEventListener('click', () => close(true));
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close(false);
+            });
+        });
+    }
+
     bindEvents() {
         document.getElementById('wc-back-btn').addEventListener('click', () => {
             this.hide();
             if (this.callbacks.onBackToWorlds) this.callbacks.onBackToWorlds();
         });
 
-        document.getElementById('wc-map-block').addEventListener('click', () => {
-            this.openMapUpload();
+        document.getElementById('wc-add-map-btn').addEventListener('click', async () => {
+            const name = await this.showPromptModal({
+                title: 'Название новой карты',
+                placeholder: 'Например, Подземелья Ораски',
+                confirmLabel: 'Добавить'
+            });
+            if (!name) return;
+
+            try {
+                await WorldsService.createMap(this.worldId, name);
+                await this.reloadMaps();
+            } catch (err) {
+                this.showError('Не удалось создать карту: ' + err.message);
+            }
         });
 
-        const enterBtn = document.getElementById('wc-enter-map-btn');
-        enterBtn.addEventListener('click', () => {
-            if (!this.map || !this.map.image_path) return;
-            this.hide();
-            if (this.callbacks.onEnterMap) this.callbacks.onEnterMap({ mapId: this.map.id });
+        document.getElementById('wc-delete-map-btn').addEventListener('click', async () => {
+            if (this.selectedMapIds.size === 0) return;
+
+            const names = this.maps
+                .filter(m => this.selectedMapIds.has(m.id))
+                .map(m => this.escapeHtml(m.name || 'Карта мира'))
+                .join(', ');
+
+            const confirmed = await this.showConfirmModal({
+                title: 'Удалить карты?',
+                message: `Удалить выбранные карты (<strong>${names}</strong>) со всеми их локациями? Это необратимо.`,
+                confirmLabel: 'Удалить'
+            });
+            if (!confirmed) return;
+
+            try {
+                for (const mapId of this.selectedMapIds) {
+                    await WorldsService.deleteMap(mapId);
+                }
+                await this.reloadMaps();
+            } catch (err) {
+                this.showError('Не удалось удалить: ' + err.message);
+            }
         });
 
         document.getElementById('wc-create-invite-btn').addEventListener('click', () => this.handleCreateInvite());
@@ -152,23 +293,77 @@ class WorldControlPage {
             const copyBtn = e.target.closest('.dm-invite-copy-btn');
             if (copyBtn) this.copyToClipboard(copyBtn.dataset.code, copyBtn);
         });
+
+        this.container.querySelectorAll('.tp-card-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('click', (e) => e.stopPropagation());
+            checkbox.addEventListener('change', () => {
+                const mapId = checkbox.dataset.mapId;
+                if (checkbox.checked) {
+                    this.selectedMapIds.add(mapId);
+                } else {
+                    this.selectedMapIds.delete(mapId);
+                }
+
+                const card = checkbox.closest('.tp-card');
+                card.classList.toggle('selected', checkbox.checked);
+
+                const deleteBtn = document.getElementById('wc-delete-map-btn');
+                deleteBtn.disabled = this.selectedMapIds.size === 0;
+            });
+        });
+
+        this.container.querySelectorAll('.tp-card-cover-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const mapId = btn.dataset.mapId;
+                const input = this.container.querySelector(`.tp-cover-input[data-map-id="${mapId}"]`);
+                input.click();
+            });
+        });
+
+        this.container.querySelectorAll('.tp-cover-input').forEach(input => {
+            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('change', async () => {
+                const file = input.files[0];
+                if (!file) return;
+                const mapId = input.dataset.mapId;
+
+                try {
+                    await MapImageService.uploadMapImage(file, this.worldId, mapId);
+                    await this.reloadMaps();
+                } catch (err) {
+                    this.showError('Не удалось загрузить изображение: ' + err.message);
+                }
+            });
+        });
+
+        this.container.querySelectorAll('.tp-card').forEach(card => {
+            card.addEventListener('click', () => {
+                this.openMap(card.dataset.mapId);
+            });
+        });
     }
 
-    openMapUpload() {
-        const uploadPage = new MapUploadPage();
-        uploadPage.initialize(
-            this.worldId,
-            this.map ? this.map.id : null,
-            (updatedMap) => {
-                // Без перезагрузки — просто обновляем состояние и
-                // перерисовываем блок карты новой картинкой
-                this.map = updatedMap;
-                this.render();
-                this.bindEvents();
-                this.loadInvites();
-            },
-            () => { uploadPage.hide(); }
-        );
+    openMap(mapId) {
+        const map = this.maps.find(m => m.id === mapId);
+        if (!map) return;
+
+        if (!map.image_path) {
+            this.showError('У этой карты пока нет изображения — нажми 🖼, чтобы загрузить.');
+            return;
+        }
+
+        this.hide();
+        if (this.callbacks.onEnterMap) this.callbacks.onEnterMap({ mapId: map.id });
+    }
+
+    // Перезагружает список карт и перерисовывает страницу целиком —
+    // тот же паттерн, что loadAndRender() в world-selection-page.js
+    async reloadMaps() {
+        await this.loadMaps();
+        this.render();
+        this.bindEvents();
+        this.loadInvites();
     }
 
     async handleCreateInvite() {
