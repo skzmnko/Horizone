@@ -43,7 +43,7 @@
 
     /* Typography */
     --mg-font-display: 'Cinzel', serif;
-    --mg-font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mg-font-body: 'Inter', system-ui, -apple-system, sans-serif;
 
     /* Sizes */
     --mg-mobile-top-panel-height: 56px;

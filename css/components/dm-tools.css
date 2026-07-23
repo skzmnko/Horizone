@@ -235,7 +235,7 @@
     font-size: 0.95rem;
     transition: all 0.2s ease;
     box-sizing: border-box;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: var(--mg-font-body);
 }
 
 .dm-form-group input:focus,

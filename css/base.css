@@ -13,6 +13,21 @@ body {
     overflow: hidden;
 }
 
+/* Browsers don't inherit the page font-family into form controls by
+   default — button/input/select/textarea fall back to the OS UI font
+   (typically Arial on Windows) unless told otherwise. This is why some
+   buttons kept showing Arial even after --mg-font-body switched to
+   Inter: most already set font-family explicitly, but not all did.
+   Component-specific font-family rules (e.g. Cinzel on CTA buttons)
+   still win — inherit only fills the gap where nothing more specific
+   is set. */
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
 /* Пока приложение не готово показать реальную карту (идёт логин/выбор
    мира) — вся "начинка" карты физически не отрисовывается. Без этого
    браузер на долю секунды показывает пустую карту с панелью фильтров

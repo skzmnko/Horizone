@@ -26,3 +26,24 @@
     font-style: normal;
     font-display: swap;
 }
+
+/* Inter — variable font, covers the full weight range (100-900) in a
+   single file each for upright/italic, so any font-weight used
+   elsewhere in the app renders at its exact weight via interpolation
+   rather than snapping to a handful of static cuts. Replaces the old
+   Segoe UI / Arial / system-font stack everywhere except Cinzel. */
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/inter-variable.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/inter-italic-variable.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}

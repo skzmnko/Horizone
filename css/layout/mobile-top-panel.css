@@ -175,7 +175,7 @@
     transition: all 0.2s ease;
     height: 40px;
     box-sizing: border-box;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: var(--mg-font-body);
 }
 
 #mobile-search:focus {
