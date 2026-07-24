@@ -1,4 +1,5 @@
 import { supabase } from '../supabase-client.js';
+import MapTileService from './map-tile-service.js';
 
 class WorldsService {
     async getMyWorlds() {
@@ -276,6 +277,8 @@ class WorldsService {
             await supabase.storage.from('world-covers').remove(coverPaths);
         }
 
+        await MapTileService.deleteAllTilesForWorld(worldId);
+
         const { error } = await supabase
             .from('worlds')
             .delete()
@@ -295,6 +298,8 @@ class WorldsService {
         if (map.image_path) {
             await supabase.storage.from('map-images').remove([map.image_path]);
         }
+
+        await MapTileService.deleteTiles(map.world_id, mapId);
 
         const { error } = await supabase
             .from('maps')

@@ -30,6 +30,12 @@ class MapUploadPage {
                 </div>
                 <input type="file" id="map-image-input" accept="image/*" class="file-input">
                 <button id="map-upload-btn" class="login-btn">Загрузить</button>
+                <div id="map-upload-progress" class="upload-progress hidden">
+                    <div class="upload-progress-bar">
+                        <div id="map-upload-progress-fill" class="upload-progress-fill"></div>
+                    </div>
+                    <div id="map-upload-progress-label" class="upload-progress-label"></div>
+                </div>
                 <div id="map-upload-error" class="error-message hidden"></div>
                 <button id="map-upload-back-btn" class="login-back-link">
                     ← Назад к мирам
@@ -58,6 +64,10 @@ class MapUploadPage {
         btn.disabled = true;
         btn.textContent = 'Загрузка...';
 
+        const progressWrap = document.getElementById('map-upload-progress');
+        const progressFill = document.getElementById('map-upload-progress-fill');
+        const progressLabel = document.getElementById('map-upload-progress-label');
+
         let mapId = this.mapId;
         let mapCreatedNow = false;
 
@@ -70,7 +80,14 @@ class MapUploadPage {
                 mapCreatedNow = true;
             }
 
-            const updatedMap = await MapImageService.uploadMapImage(file, this.worldId, mapId);
+            const updatedMap = await MapImageService.uploadMapImage(file, this.worldId, mapId, ({ uploaded, total, failed }) => {
+                if (!total) return;
+                progressWrap.classList.remove('hidden');
+                btn.textContent = 'Нарезка карты на тайлы...';
+                const percent = Math.round((uploaded / total) * 100);
+                progressFill.style.width = `${percent}%`;
+                progressLabel.textContent = `${uploaded} / ${total} тайлов` + (failed ? ` (ошибок: ${failed})` : '');
+            });
 
             this.hide();
             if (this.onUploaded) this.onUploaded(updatedMap);
@@ -85,6 +102,9 @@ class MapUploadPage {
                     console.warn('⚠️ Failed to clean up empty map after upload error:', cleanupErr);
                 }
             }
+
+            progressWrap.classList.add('hidden');
+            progressFill.style.width = '0%';
 
             const errorEl = document.getElementById('map-upload-error');
             errorEl.textContent = 'Ошибка загрузки: ' + err.message;

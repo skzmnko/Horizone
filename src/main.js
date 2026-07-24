@@ -13,6 +13,7 @@ import WorldSelectionPage from './utils/world-selection-page.js';
 import WorldControlPage from './utils/world-control-page.js';
 import AccountSettingsPage from './utils/account-settings-page.js';
 import MapImageService from './services/map-image-service.js';
+import MapTileService from './services/map-tile-service.js';
 import WorldsService from './services/worlds-service.js';
 import DetailPanelService from './services/detail-panel-service.js';
 import DMToolsPanel from './dm/dm-tools-panel.js';
@@ -214,6 +215,12 @@ class Application {
         this.mapImageUrl = MapImageService.getPublicUrl(map.image_path);
         this.mapWidth = map.width;
         this.mapHeight = map.height;
+        this.mapTilesReady = !!map.tiles_ready;
+        this.mapTileSize = map.tile_size;
+        this.mapNativeZoom = map.native_zoom;
+        this.mapTileUrlTemplate = this.mapTilesReady
+            ? MapTileService.getTileUrlTemplate(worldId, mapId, map.tile_ext || 'webp')
+            : null;
         this.initializeApp();
     }
 
@@ -247,7 +254,11 @@ class Application {
         MapService.initialize('map', {
             width: this.mapWidth,
             height: this.mapHeight,
-            imageUrl: this.mapImageUrl
+            imageUrl: this.mapImageUrl,
+            tilesReady: this.mapTilesReady,
+            tileUrlTemplate: this.mapTileUrlTemplate,
+            tileSize: this.mapTileSize,
+            nativeZoom: this.mapNativeZoom
         });
         console.log('✅ The map has been initialized');
 

@@ -127,7 +127,9 @@ class WorldControlPage {
 
         const statusBadge = map.is_main
             ? t('worldControl.mapMainBadge')
-            : (hasImage ? t('worldControl.mapReadyBadge') : t('worldControl.mapNoImageBadge'));
+            : (hasImage
+                ? (map.tiles_ready ? t('worldControl.mapTilesReadyBadge') : t('worldControl.mapReadyBadge'))
+                : t('worldControl.mapNoImageBadge'));
 
         return `
             <div class="tp-card ${isSelected ? 'selected' : ''} ${map.is_main ? 'tp-card-main' : ''}" data-map-id="${map.id}">
@@ -335,12 +337,23 @@ class WorldControlPage {
                 const file = input.files[0];
                 if (!file) return;
                 const mapId = input.dataset.mapId;
+                const btn = this.container.querySelector(`.tp-card-cover-btn[data-map-id="${mapId}"]`);
+
+                if (btn) btn.disabled = true;
 
                 try {
-                    await MapImageService.uploadMapImage(file, this.worldId, mapId);
+                    await MapImageService.uploadMapImage(file, this.worldId, mapId, ({ uploaded, total }) => {
+                        if (btn && total > 0) {
+                            btn.textContent = `⏳ ${Math.round((uploaded / total) * 100)}%`;
+                        }
+                    });
                     await this.reloadMaps();
                 } catch (err) {
                     this.showError(t('worldControl.errorUploadImage', { message: err.message }));
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '🖼';
+                    }
                 }
             });
         });
