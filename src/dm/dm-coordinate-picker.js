@@ -82,7 +82,12 @@ class DMCoordinatePicker {
         if (!this.isActive) return;
 
         const latlng = e.latlng;
-        const pointPixels = MapService.map.project(latlng, MapService.map.getMaxZoom());
+        // Пересчёт координат клика в пиксели картинки делаем на nativeZoom,
+        // а не на текущем максимальном зуме карты: с оверзумом (см.
+        // map-service.js) getMaxZoom() уходит глубже нативного разрешения
+        // картинки, и если проецировать по нему, пиксельные координаты
+        // "поплывут" — локации будут ставиться не туда.
+        const pointPixels = MapService.map.project(latlng, MapService.nativeZoom);
         const pixelX = pointPixels.x;
         const pixelY = pointPixels.y;
 
@@ -111,7 +116,7 @@ class DMCoordinatePicker {
         if (!this.isActive) return;
 
         const latlng = e.latlng;
-        const pointPixels = MapService.map.project(latlng, MapService.map.getMaxZoom());
+        const pointPixels = MapService.map.project(latlng, MapService.nativeZoom);
         const pixelX = pointPixels.x;
         const pixelY = pointPixels.y;
 

@@ -5,6 +5,16 @@
 // пиксель.
 const LEGACY_NATIVE_ZOOM = 5;
 
+// Сколько уровней зума добавляем СВЕРХ нативного разрешения карты.
+// У изображения физически нет пикселей глубже нативного зума, поэтому
+// тайлы на этих уровнях — это апскейл самого детального (nativeZoom)
+// тайла средствами браузера, без обращения к серверу за новыми
+// тайлами (см. maxNativeZoom у L.tileLayer). Сама подложка на этих
+// уровнях становится чуть мягче, зато маркеры, иконки и подписи
+// локаций — они не растровые, а рисуются Leaflet поверх карты — от
+// этого становятся крупнее и заметно разборчивее, что и было целью.
+const OVERZOOM_LEVELS = 3;
+
 class MapService {
     constructor() {
         this.map = null;
@@ -30,19 +40,20 @@ class MapService {
 
         this.tilesReady = !!(mapConfig.tilesReady && mapConfig.tileUrlTemplate && mapConfig.nativeZoom != null);
 
-        // Раньше зум был жёстко зашит в 0..5 для всех карт независимо от
-        // реального разрешения картинки (сама картинка была одна на все
-        // уровни, браузер просто растягивал/сжимал её через CSS). Теперь,
-        // когда есть тайлы, "нативный" зум зависит от фактического
-        // разрешения загруженной картинки — так на маленькой карте не
-        // будет лишних уровней зума без реальной детализации, а на очень
-        // крупной будет достаточно уровней, чтобы разглядеть детали, не
-        // растягивая пиксели.
+        // this.nativeZoom — это "опорный" зум для пересчёта пикселей
+        // картинки в координаты Leaflet (bounds, percentToLatLng, а
+        // также project() в dm-coordinate-picker.js). Он НЕ равен
+        // максимальному зуму карты — см. maxZoom ниже: пользователю
+        // разрешено крутить зум глубже, но пиксельная система координат
+        // при этом не должна "плыть", иначе собьётся позиционирование
+        // локаций на карте.
         this.nativeZoom = this.tilesReady ? mapConfig.nativeZoom : LEGACY_NATIVE_ZOOM;
+
+        const maxZoom = this.nativeZoom + OVERZOOM_LEVELS;
 
         this.map = L.map(mapElementId, {
             minZoom: 0,
-            maxZoom: this.nativeZoom,
+            maxZoom,
             zoomSnap: 0.5,
             attributionControl: false,
             preferCanvas: true,
@@ -50,8 +61,8 @@ class MapService {
             zoomControl: false
         });
 
-        const southWest = this.map.unproject([0, this.mapHeight], this.map.getMaxZoom());
-        const northEast = this.map.unproject([this.mapWidth, 0], this.map.getMaxZoom());
+        const southWest = this.map.unproject([0, this.mapHeight], this.nativeZoom);
+        const northEast = this.map.unproject([this.mapWidth, 0], this.nativeZoom);
         this.bounds = new L.LatLngBounds(southWest, northEast);
 
         if (this.tilesReady) {
@@ -59,7 +70,7 @@ class MapService {
                 tileSize: mapConfig.tileSize || 256,
                 minZoom: 0,
                 maxNativeZoom: this.nativeZoom,
-                maxZoom: this.nativeZoom,
+                maxZoom,
                 noWrap: true,
                 bounds: this.bounds,
                 keepBuffer: 2
@@ -156,7 +167,7 @@ class MapService {
         const x_px = (x_percent / 100) * this.mapWidth;
         const y_px = (y_percent / 100) * this.mapHeight;
 
-        return this.map.unproject([x_px, y_px], this.map.getMaxZoom());
+        return this.map.unproject([x_px, y_px], this.nativeZoom);
     }
 
     resetView() {
