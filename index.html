@@ -20,6 +20,18 @@
         </a>
         <div class="mg-app-header__spacer"></div>
         <div class="mg-app-header__actions">
+            <!-- World settings — only shown to the DM while a world is
+                 open (see UIService.refreshWorldSettingsButton()).
+                 Unlike the profile button, this opens a page directly,
+                 no dropdown. -->
+            <button id="world-settings-btn" class="world-settings-btn hidden" type="button" title="World settings" data-i18n-title="header.worldSettingsTitle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                    <path d="M2 12h20"/>
+                </svg>
+            </button>
+
             <!-- Profile menu trigger -->
             <button id="desktop-profile-btn" class="desktop-profile-btn" type="button" title="Profile" data-i18n-title="header.profileMenuTitle" aria-haspopup="menu" aria-expanded="false">
                 <span class="mg-avatar" id="desktop-profile-avatar">

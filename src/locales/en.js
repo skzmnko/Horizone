@@ -8,6 +8,7 @@ export default {
   },
   header: {
     profileMenuTitle: 'Profile',
+    worldSettingsTitle: 'World settings',
     accountSettings: 'Account settings',
     logout: 'Log out',
     loggingOut: 'Logging out...',
@@ -122,6 +123,13 @@ export default {
     errorDisplayNameTaken: 'This account name is already taken',
     errorGeneric: 'Something went wrong. Please try again.',
     errorNetworkError: 'Network error, please try again',
+  },
+  worldSettings: {
+    backButton: '← Back',
+    pageTitle: 'World settings',
+
+    comingSoonTitle: 'More settings are on the way',
+    comingSoonHint: "This is where world-level settings (visibility, and more) will live. Nothing to configure here just yet — check back soon.",
   },
   worldControl: {
     backButton: '← All worlds',

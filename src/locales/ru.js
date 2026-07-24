@@ -8,6 +8,7 @@ export default {
   },
   header: {
     profileMenuTitle: 'Профиль',
+    worldSettingsTitle: 'Настройки мира',
     accountSettings: 'Настройки аккаунта',
     logout: 'Выйти',
     loggingOut: 'Выход...',
@@ -122,6 +123,13 @@ export default {
     errorDisplayNameTaken: 'Это имя аккаунта уже занято',
     errorGeneric: 'Что-то пошло не так. Попробуй ещё раз.',
     errorNetworkError: 'Ошибка сети, попробуй ещё раз',
+  },
+  worldSettings: {
+    backButton: '← Назад',
+    pageTitle: 'Настройки мира',
+
+    comingSoonTitle: 'Больше настроек скоро появится',
+    comingSoonHint: 'Здесь будут жить настройки мира (видимость и другие). Пока настраивать нечего — загляни позже.',
   },
   worldControl: {
     backButton: '← Ко всем мирам',

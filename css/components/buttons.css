@@ -122,6 +122,35 @@
     transition: all 0.2s ease;
 }
 
+/* World settings — opens a page directly (no dropdown), so unlike
+   desktop-profile-btn it doesn't wrap a separate .mg-avatar circle;
+   the highlight-on-hover lives on the button itself. Hit area is the
+   same 34x34 circle as desktop-profile-btn, per design spec. */
+.world-settings-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--mg-text-secondary);
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.world-settings-btn:hover {
+    background: var(--mg-hover);
+    color: var(--mg-text-accent);
+}
+
+.world-settings-btn.hidden {
+    display: none;
+}
+
 .desktop-profile-btn:hover .mg-avatar {
     box-shadow: var(--mg-glow), 0 0 0 2px var(--mg-accent-muted);
 }

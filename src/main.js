@@ -12,6 +12,7 @@ import ResetPasswordPage from './utils/reset-password-page.js';
 import WorldSelectionPage from './utils/world-selection-page.js';
 import WorldControlPage from './utils/world-control-page.js';
 import AccountSettingsPage from './utils/account-settings-page.js';
+import WorldSettingsPage from './utils/world-settings-page.js';
 import MapImageService from './services/map-image-service.js';
 import MapTileService from './services/map-tile-service.js';
 import WorldsService from './services/worlds-service.js';
@@ -74,6 +75,7 @@ class Application {
             this.uiService = new UIService();
             this.uiService.initializeProfileMenu();
             this.uiService.onAccountSettingsClick = () => this.showAccountSettingsPage();
+            this.uiService.onWorldSettingsClick = (worldId) => this.showWorldSettingsPage(worldId);
 
             let recoveryHandled = false;
             AuthService.onAuthStateChange((event) => {
@@ -151,8 +153,23 @@ class Application {
         });
     }
 
+    showWorldSettingsPage(worldId) {
+        if (this.worldSettingsPage) {
+            // Already open — avoid stacking a second overlay on top of it.
+            return;
+        }
+        this.worldSettingsPage = new WorldSettingsPage();
+        this.worldSettingsPage.initialize(worldId, ({ closed } = {}) => {
+            if (closed) {
+                this.worldSettingsPage = null;
+            }
+        });
+    }
+
     showWorldSelectionPage() {
         clearWorldUrlParam();
+        this.currentWorldId = null;
+        this.uiService.setCurrentWorldId(null);
         this.worldSelectionPage = new WorldSelectionPage();
         this.worldSelectionPage.initialize(({ worldId }) => {
             this.enterWorld(worldId);
@@ -165,6 +182,7 @@ class Application {
         this.uiService.refreshProfileRole();
 
         this.currentWorldId = worldId;
+        this.uiService.setCurrentWorldId(worldId);
 
         const map = await WorldsService.getEntryMap(worldId);
         this.currentMapId = map ? map.id : null;

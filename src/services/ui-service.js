@@ -28,6 +28,9 @@ class UIService {
         this.profileAvatar = null;
         this.isProfileOpen = false;
         this.onAccountSettingsClick = null;
+        this.onWorldSettingsClick = null;
+        this.worldSettingsBtn = null;
+        this.currentWorldId = null;
     }
 
     initialize() {
@@ -165,6 +168,7 @@ class UIService {
         this.desktopProfileAvatar = document.getElementById('desktop-profile-avatar');
         this.profileAvatar = document.getElementById('profile-avatar');
         this.profileAccountSettingsBtn = document.getElementById('profile-account-settings-btn');
+        this.worldSettingsBtn = document.getElementById('world-settings-btn');
 
         this.applyStaticI18n();
         this.refreshProfileUser();
@@ -174,6 +178,15 @@ class UIService {
             this.profileAccountSettingsBtn.addEventListener('click', () => {
                 this.closeProfilePanel();
                 if (this.onAccountSettingsClick) this.onAccountSettingsClick();
+            });
+        }
+
+        if (this.worldSettingsBtn) {
+            // Opens a page directly — no dropdown/menu, unlike the profile button.
+            this.worldSettingsBtn.addEventListener('click', () => {
+                if (this.onWorldSettingsClick && this.currentWorldId) {
+                    this.onWorldSettingsClick(this.currentWorldId);
+                }
             });
         }
 
@@ -255,6 +268,23 @@ class UIService {
         }
         this.profileRole.style.display = '';
         this.profileRole.textContent = AuthService.isDM() ? t('header.roleDm') : t('header.rolePlayer');
+        this.refreshWorldSettingsButton();
+    }
+
+    /* Tracks which world is currently open so the header's World
+       settings button knows what to open, and shows/hides it: it only
+       makes sense for the DM, and only while a specific world is
+       active (same conditions as the role label above). Call with
+       null when leaving a world (e.g. back to world selection). */
+    setCurrentWorldId(worldId) {
+        this.currentWorldId = worldId;
+        this.refreshWorldSettingsButton();
+    }
+
+    refreshWorldSettingsButton() {
+        if (!this.worldSettingsBtn) return;
+        const show = !!this.currentWorldId && AuthService.isDM();
+        this.worldSettingsBtn.classList.toggle('hidden', !show);
     }
 
     toggleProfilePanel() {
