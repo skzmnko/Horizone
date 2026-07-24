@@ -1,7 +1,6 @@
 import { supabase } from '../supabase-client.js';
 
 class WorldsService {
-    // Список миров, в которых состоит текущий пользователь, с его ролью в каждом
     async getMyWorlds() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
@@ -27,10 +26,6 @@ class WorldsService {
         }));
     }
 
-    // Публичные миры — видны ЛЮБОМУ зарегистрированному пользователю,
-    // а не только участникам (см. RLS-политику "Users can view accessible worlds").
-    // Отдаёт только базовую информацию (без карт/локаций — они по-прежнему
-    // доступны только участникам мира).
     async getPublicWorlds() {
         const { data, error } = await supabase
             .from('worlds')
@@ -51,7 +46,6 @@ class WorldsService {
         }));
     }
 
-    // Сделать мир публичным/приватным — доступно только владельцу (проверяется RLS)
     async setWorldVisibility(worldId, isPublic) {
         const { error } = await supabase
             .from('worlds')
@@ -64,8 +58,6 @@ class WorldsService {
         }
     }
 
-    // Роль текущего пользователя в конкретном мире — используется, чтобы
-    // корректно проставить AuthService.setCurrentWorldRole() при открытии карты
     async getMyRoleInWorld(worldId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
@@ -85,7 +77,6 @@ class WorldsService {
         return data ? data.role : null;
     }
 
-    // Создать новый мир (вызывающий пользователь автоматически становится DM)
     async createWorld(name) {
         const { data, error } = await supabase.rpc('create_world', { _name: name });
 
@@ -95,12 +86,9 @@ class WorldsService {
         }
 
         console.log(`✅ World created: ${name} (${data})`);
-        return data; // id нового мира
+        return data;
     }
 
-    // Присоединиться к существующему миру по коду приглашения.
-    // characterName — необязательное отображаемое имя (имя персонажа)
-    // именно в этом мире; можно поменять позже через setMyWorldDisplayName.
     async joinWorldByInviteCode(code, characterName = null) {
         const { data, error } = await supabase.rpc('redeem_invite', {
             _code: code.trim().toUpperCase(),
@@ -113,10 +101,9 @@ class WorldsService {
         }
 
         console.log(`✅ Joined world: ${data}`);
-        return data; // id мира, к которому присоединились
+        return data; 
     }
 
-    // Сменить своё отображаемое имя (имя персонажа) в конкретном мире
     async setMyWorldDisplayName(worldId, name) {
         const { error } = await supabase.rpc('set_my_world_display_name', {
             _world_id: worldId,
@@ -129,8 +116,6 @@ class WorldsService {
         }
     }
 
-    // Создать код приглашения для мира (доступно только DM — проверяется RLS-политикой).
-    // maxUses: null — без ограничения по числу использований, 1 — одноразовая ссылка (для одного игрока).
     async createInvite(worldId, { expiresInHours = null, maxUses = null } = {}) {
         const code = this.generateCode();
         const expires_at = expiresInHours
@@ -153,7 +138,6 @@ class WorldsService {
         return data;
     }
 
-    // Список активных приглашений мира — для панели DM
     async getWorldInvites(worldId) {
         const { data, error } = await supabase.rpc('get_world_invites', { _world_id: worldId });
 
@@ -165,7 +149,6 @@ class WorldsService {
         return data;
     }
 
-    // Отозвать (удалить) код приглашения — доступно только DM (RLS)
     async revokeInvite(inviteId) {
         const { error } = await supabase
             .from('world_invites')
@@ -179,7 +162,6 @@ class WorldsService {
     }
 
     generateCode(length = 8) {
-        // Без похожих символов (0/O, 1/I) — легче продиктовать игрокам вслух
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         let result = '';
         for (let i = 0; i < length; i++) {
@@ -192,7 +174,9 @@ class WorldsService {
         const { data, error } = await supabase
             .from('maps')
             .select('*')
-            .eq('world_id', worldId);
+            .eq('world_id', worldId)
+            .order('is_main', { ascending: false })
+            .order('created_at', { ascending: true });
 
         if (error) {
             console.error('❌ Error loading maps:', error);
@@ -200,6 +184,27 @@ class WorldsService {
         }
 
         return data;
+    }
+
+    async getEntryMap(worldId) {
+        const maps = await this.getMapsForWorld(worldId);
+        if (maps.length === 0) return null;
+
+        const main = maps.find(m => m.is_main);
+        if (main?.image_path) return main;
+
+        const readyMap = maps.find(m => m.image_path);
+        if (readyMap) return readyMap;
+
+        return main || maps[0];
+    }
+
+    async setMainMap(mapId, worldId) {
+        const { error } = await supabase.rpc('set_main_map', { _map_id: mapId, _world_id: worldId });
+        if (error) {
+            console.error('❌ Error setting main map:', error);
+            throw error;
+        }
     }
 
     async getMap(mapId) {
@@ -217,7 +222,6 @@ class WorldsService {
         return data;
     }
 
-    // Детали одного мира (имя, обложка) — нужно для world-control-page
     async getWorld(worldId) {
         const { data, error } = await supabase
             .from('worlds')
@@ -233,8 +237,6 @@ class WorldsService {
         return data;
     }
 
-    // Создать новую карту в уже существующем мире (например, когда
-    // единственную карту мира удалили, или DM хочет несколько карт)
     async createMap(worldId, name) {
         const { data, error } = await supabase
             .from('maps')
@@ -251,9 +253,6 @@ class WorldsService {
         return data;
     }
 
-    // Удалить мир целиком: сначала подчищаем файлы карт в Storage
-    // (участники/карты/локации в БД удалятся сами — на них стоит
-    // "on delete cascade"), затем удаляем саму строку мира.
     async deleteWorld(worldId) {
         const { data: files, error: listError } = await supabase.storage
             .from('map-images')
@@ -290,7 +289,6 @@ class WorldsService {
         console.log(`🗑️ World deleted: ${worldId}`);
     }
 
-    // Удалить одну карту (локации этой карты удалятся каскадно)
     async deleteMap(mapId) {
         const map = await this.getMap(mapId);
 

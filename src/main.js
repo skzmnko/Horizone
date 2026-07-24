@@ -165,8 +165,7 @@ class Application {
 
         this.currentWorldId = worldId;
 
-        const maps = await WorldsService.getMapsForWorld(worldId);
-        const map = maps[0] || null;
+        const map = await WorldsService.getEntryMap(worldId);
         this.currentMapId = map ? map.id : null;
 
         if (AuthService.isDM()) {

@@ -157,6 +157,9 @@ export default {
     uploadMapImageTitle: 'Upload map image',
     mapReadyBadge: '🗺️ Ready',
     mapNoImageBadge: '⬆️ No image',
+    mapMainBadge: '⭐ Main',
+    setAsMainTitle: 'Set as the main map — this is what players see first when they enter the world',
+    errorSetMainMap: 'Failed to set main map: {message}',
 
     newMapTitle: 'New map name',
     newMapPlaceholder: 'e.g. Oraska Dungeons',

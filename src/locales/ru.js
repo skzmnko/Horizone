@@ -157,6 +157,9 @@ export default {
     uploadMapImageTitle: 'Загрузить изображение карты',
     mapReadyBadge: '🗺️ Готова',
     mapNoImageBadge: '⬆️ Нет изображения',
+    mapMainBadge: '⭐ Основная',
+    setAsMainTitle: 'Сделать основной картой — именно её первой увидят игроки при входе в мир',
+    errorSetMainMap: 'Не удалось назначить основную карту: {message}',
 
     newMapTitle: 'Название новой карты',
     newMapPlaceholder: 'Например, Подземелья Ораски',

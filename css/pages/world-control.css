@@ -132,3 +132,29 @@
     margin: -8px 0 14px;
     line-height: 1.4;
 }
+/* Map grid: "set as main" star button + subtle highlight for the
+   world's current main map. */
+.tp-card-main-btn {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    color: #ffffff;
+    border-radius: var(--mg-radius-md);
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 2;
+}
+
+.tp-card-image-wrap:hover .tp-card-main-btn {
+    opacity: 1;
+}
+
+.tp-card-main {
+    border-color: var(--mg-gold-muted);
+}

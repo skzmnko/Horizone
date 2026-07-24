@@ -125,8 +125,12 @@ class WorldControlPage {
                    <span class="tp-card-placeholder-text">${name}</span>
                </div>`;
 
+        const statusBadge = map.is_main
+            ? t('worldControl.mapMainBadge')
+            : (hasImage ? t('worldControl.mapReadyBadge') : t('worldControl.mapNoImageBadge'));
+
         return `
-            <div class="tp-card ${isSelected ? 'selected' : ''}" data-map-id="${map.id}">
+            <div class="tp-card ${isSelected ? 'selected' : ''} ${map.is_main ? 'tp-card-main' : ''}" data-map-id="${map.id}">
                 <div class="tp-card-image-wrap">
                     ${imageHtml}
                     <label class="tp-card-checkbox-wrap">
@@ -134,10 +138,11 @@ class WorldControlPage {
                     </label>
                     <button class="tp-card-cover-btn" data-map-id="${map.id}" title="${hasImage ? t('worldControl.replaceMapImageTitle') : t('worldControl.uploadMapImageTitle')}">🖼</button>
                     <input type="file" accept="image/*" class="tp-cover-input" data-map-id="${map.id}">
+                    ${!map.is_main ? `<button class="tp-card-main-btn" data-map-id="${map.id}" title="${t('worldControl.setAsMainTitle')}">🚩</button>` : ''}
                 </div>
                 <div class="tp-card-name">
                     ${name}
-                    <span class="tp-card-role">${hasImage ? t('worldControl.mapReadyBadge') : t('worldControl.mapNoImageBadge')}</span>
+                    <span class="tp-card-role">${statusBadge}</span>
                 </div>
             </div>
         `;
@@ -313,6 +318,8 @@ class WorldControlPage {
             });
         });
 
+        this.container.querySelectorAll('.tp-card-main-btn').forEach(btn => this.bindMainButton(btn));
+
         this.container.querySelectorAll('.tp-card-cover-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -365,6 +372,110 @@ class WorldControlPage {
         this.render();
         this.bindEvents();
         this.loadInvites();
+    }
+
+    bindMainButton(btn) {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const mapId = btn.dataset.mapId;
+
+            try {
+                await WorldsService.setMainMap(mapId, this.worldId);
+                this.animateSetMainMap(mapId);
+            } catch (err) {
+                this.showError(t('worldControl.errorSetMainMap', { message: err.message }));
+            }
+        });
+    }
+
+    // Вместо полной перезагрузки грида (reloadMaps → render → bindEvents,
+    // из-за чего все плитки пересоздаются и позиция "прыгает" мгновенно)
+    // — двигаем уже существующие DOM-узлы карточек (картинки не
+    // перезагружаются, не мигают) и анимируем переход техникой FLIP:
+    // запоминаем позиции ДО перестановки, переставляем DOM, инвертируем
+    // разницу через transform без transition, затем в следующем кадре
+    // включаем transition и сбрасываем transform — браузер плавно
+    // анимирует переход из старой позиции в новую.
+    animateSetMainMap(mapId) {
+        const grid = this.container.querySelector('.tp-grid');
+        if (!grid) {
+            this.reloadMaps();
+            return;
+        }
+
+        const firstRects = new Map();
+        Array.from(grid.children).forEach(card => {
+            firstRects.set(card.dataset.mapId, card.getBoundingClientRect());
+        });
+
+        const previousMain = this.maps.find(m => m.is_main);
+        this.maps.forEach(m => { m.is_main = (m.id === mapId); });
+        this.maps.sort((a, b) => {
+            if (a.is_main !== b.is_main) return a.is_main ? -1 : 1;
+            return new Date(a.created_at) - new Date(b.created_at);
+        });
+
+        // Точечно обновляем только две затронутые плитки (бейдж + кнопка),
+        // не трогая остальные — у них ничего не изменилось, а <img> внутри
+        // не должна перерисовываться заново.
+        [previousMain?.id, mapId].filter(Boolean).forEach(id => {
+            const map = this.maps.find(m => m.id === id);
+            const card = grid.querySelector(`.tp-card[data-map-id="${id}"]`);
+            if (!card || !map) return;
+
+            card.classList.toggle('tp-card-main', map.is_main);
+
+            const roleEl = card.querySelector('.tp-card-role');
+            if (roleEl) {
+                roleEl.textContent = map.is_main
+                    ? t('worldControl.mapMainBadge')
+                    : (map.image_path ? t('worldControl.mapReadyBadge') : t('worldControl.mapNoImageBadge'));
+            }
+
+            const existingBtn = card.querySelector('.tp-card-main-btn');
+            if (map.is_main) {
+                if (existingBtn) existingBtn.remove();
+            } else if (!existingBtn) {
+                const btn = document.createElement('button');
+                btn.className = 'tp-card-main-btn';
+                btn.dataset.mapId = map.id;
+                btn.title = t('worldControl.setAsMainTitle');
+                btn.textContent = '🚩';
+                card.querySelector('.tp-card-image-wrap').appendChild(btn);
+                this.bindMainButton(btn);
+            }
+        });
+
+        // Переставляем существующие узлы в новом порядке — appendChild
+        // на уже прикреплённом элементе просто перемещает его, а не
+        // создаёт заново.
+        this.maps.forEach(map => {
+            const card = grid.querySelector(`.tp-card[data-map-id="${map.id}"]`);
+            if (card) grid.appendChild(card);
+        });
+
+        // FLIP: инвертируем разницу позиций и отпускаем в transition
+        Array.from(grid.children).forEach(card => {
+            const first = firstRects.get(card.dataset.mapId);
+            if (!first) return;
+
+            const last = card.getBoundingClientRect();
+            const dx = first.left - last.left;
+            const dy = first.top - last.top;
+            if (!dx && !dy) return;
+
+            card.style.transition = 'none';
+            card.style.transform = `translate(${dx}px, ${dy}px)`;
+
+            requestAnimationFrame(() => {
+                card.style.transition = 'transform 0.35s ease';
+                card.style.transform = '';
+            });
+
+            card.addEventListener('transitionend', () => {
+                card.style.transition = '';
+            }, { once: true });
+        });
     }
 
     async handleCreateInvite() {
